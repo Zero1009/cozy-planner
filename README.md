@@ -94,37 +94,62 @@ the assistant returns a friendly "can't connect" message.
 | `npm run db:migrate`  | Apply migrations to the target DB              |
 | `npm run db:seed`     | Reset + seed sample todos/events (dev only)    |
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request to `main` (and on pushes
+to `main`): it installs with `npm ci`, then runs `npm run typecheck` and
+`npm run build`. The build touches neither the database nor the AI provider
+(route handlers are dynamic and not executed at build time), so **no secrets are
+needed in CI**.
+
 ## Deploy to Vercel
 
-1. **Create a Turso database** (https://turso.tech):
+### 1. Provision the database (Turso)
 
-   ```bash
-   turso db create cozy-planner
-   turso db show cozy-planner --url          # → TURSO_DATABASE_URL
-   turso db tokens create cozy-planner       # → TURSO_AUTH_TOKEN
-   ```
+Run the helper once — it creates the DB, prints the credentials, applies the
+schema, and can seed sample data:
 
-2. **Apply the schema** to the Turso DB (once, from your machine):
+```bash
+./scripts/setup-turso.sh            # needs the Turso CLI + `turso auth login`
+```
 
-   ```bash
-   TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:migrate
-   # optional first-run sample data:
-   TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:seed
-   ```
+<details><summary>…or do it by hand</summary>
 
-3. **Import the repo on Vercel** and set Environment Variables (Production +
-   Preview):
+```bash
+turso db create cozy-planner
+turso db show cozy-planner --url          # → TURSO_DATABASE_URL
+turso db tokens create cozy-planner       # → TURSO_AUTH_TOKEN
+TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:migrate
+TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:seed   # optional
+```
+</details>
 
-   | Variable              | Value                                   |
-   | --------------------- | --------------------------------------- |
-   | `TURSO_DATABASE_URL`  | `libsql://your-db.turso.io`             |
-   | `TURSO_AUTH_TOKEN`    | your Turso token                        |
-   | `GROQ_API_KEY`        | your Groq key                           |
-   | `GROQ_MODEL`          | `openai/gpt-oss-120b` (or any Groq model)|
+### 2. Get a Groq key
 
-4. **Deploy.** The default build command (`next build`) is all Vercel needs;
-   migrations are applied out-of-band in step 2, so no DB credentials are
-   required at build time.
+Create one at https://console.groq.com/keys → `GROQ_API_KEY`.
+
+### 3. Deploy on Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FZero1009%2Fcozy-planner&env=TURSO_DATABASE_URL,TURSO_AUTH_TOKEN,GROQ_API_KEY,GROQ_MODEL&envDescription=Turso%20DB%20URL%2Ftoken%20and%20Groq%20API%20key)
+
+Or import the repo manually (New Project → import `Zero1009/cozy-planner`). Set
+these Environment Variables for **Production + Preview**:
+
+| Variable              | Value                                      |
+| --------------------- | ------------------------------------------ |
+| `TURSO_DATABASE_URL`  | `libsql://your-db.turso.io`                |
+| `TURSO_AUTH_TOKEN`    | your Turso token                           |
+| `GROQ_API_KEY`        | your Groq key                              |
+| `GROQ_MODEL`          | `openai/gpt-oss-120b` (or any Groq model)  |
+
+The default build command (`next build`) is all Vercel needs — migrations were
+applied in step 1, so no DB credentials are required at build time. Once the
+GitHub repo is connected, every push builds a Preview and merges to the
+production branch deploy automatically.
+
+> **Note:** the schema lives in Turso, so run `npm run db:migrate` against your
+> Turso URL whenever you change `src/db/schema.ts` (regenerate first with
+> `npm run db:generate`).
 
 ## License
 
