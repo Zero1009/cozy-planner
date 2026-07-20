@@ -2,10 +2,12 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
-import { useCreateEvent } from "@/hooks/useEvents";
-import { agendaForDate, dotsForDate } from "@/lib/agenda";
+import { useCreateEvent, useDeleteEvent } from "@/hooks/useEvents";
+import { useDeleteTodo } from "@/hooks/useTodos";
+import { agendaForDate, dotsForDate, type AgendaItem } from "@/lib/agenda";
 import {
   addDays,
   addMonths,
@@ -76,6 +78,14 @@ export function CalendarView({
   setCalRefDate,
   onToday,
 }: CalendarViewProps) {
+  const deleteEvent = useDeleteEvent();
+  const deleteTodo = useDeleteTodo();
+
+  function deleteItem(item: AgendaItem) {
+    if (item.type === "event") deleteEvent.mutate(item.id);
+    else deleteTodo.mutate(item.id);
+  }
+
   function goPrev() {
     if (calView === "month") setCalRefDate(toISO(addMonths(fromISO(calRefDate), -1)));
     else if (calView === "week") setSelectedDate(toISO(addDays(fromISO(selectedDate), -7)));
@@ -235,6 +245,7 @@ export function CalendarView({
               events={events}
               todos={todos}
               cardStyle={cardStyle}
+              onDelete={deleteItem}
             />
           )}
         </div>
@@ -248,6 +259,7 @@ export function CalendarView({
               events={events}
               todos={todos}
               cardStyle={cardStyle}
+              onDelete={deleteItem}
             />
             <AddEventForm theme={theme} lang={lang} selectedDate={selectedDate} cardStyle={cardStyle} />
           </div>
@@ -495,12 +507,14 @@ function DayAgenda({
   events,
   todos,
   cardStyle,
+  onDelete,
 }: {
   theme: Theme;
   lang: Lang;
   selectedDate: string;
   events: CalEvent[];
   todos: Todo[];
+  onDelete: (item: AgendaItem) => void;
 } & CardStyleProp) {
   const items = agendaForDate(selectedDate, lang, events, todos);
   return (
@@ -556,6 +570,7 @@ function DayAgenda({
               >
                 {item.categoryLabel}
               </span>
+              <DeleteButton theme={theme} ariaLabel="delete item" onClick={() => onDelete(item)} />
             </div>
           ))}
         </div>
@@ -571,12 +586,14 @@ function SidePanelAgenda({
   events,
   todos,
   cardStyle,
+  onDelete,
 }: {
   theme: Theme;
   lang: Lang;
   selectedDate: string;
   events: CalEvent[];
   todos: Todo[];
+  onDelete: (item: AgendaItem) => void;
 } & CardStyleProp) {
   const items = agendaForDate(selectedDate, lang, events, todos);
   return (
@@ -622,6 +639,7 @@ function SidePanelAgenda({
               >
                 {item.title}
               </span>
+              <DeleteButton theme={theme} ariaLabel="delete item" size={13} onClick={() => onDelete(item)} />
             </div>
           ))}
         </div>

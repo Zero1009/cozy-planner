@@ -105,6 +105,21 @@ export function ClockIcon({ size = 14, style }: IconProps) {
   );
 }
 
+export function TrashIcon({ size = 15, style }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" style={style} aria-hidden>
+      <path
+        d="M2.5 4h11M6 4V2.8c0-.4.3-.8.8-.8h2.4c.5 0 .8.4.8.8V4M4 4l.6 9c0 .6.5 1 1 1h4.8c.5 0 1-.4 1-1L12 4M6.5 7v4M9.5 7v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function GearIcon({ size = 16, style }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 18 18" style={style} aria-hidden>

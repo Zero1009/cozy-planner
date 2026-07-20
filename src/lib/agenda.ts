@@ -11,6 +11,8 @@ const PRIORITY_ORDER: Record<Todo["priority"], number> = {
 
 export interface AgendaItem {
   key: string;
+  type: "event" | "todo";
+  id: number;
   time: string;
   title: string;
   categoryLabel: string;
@@ -42,6 +44,8 @@ export function agendaForDate(
       const colors = catColors(e.category);
       return {
         key: `e-${e.id}`,
+        type: "event" as const,
+        id: e.id,
         time: e.endTime ? `${e.time}–${e.endTime}` : e.time,
         title: e.title,
         categoryLabel: labelFor(lang, e.category, e.customCategoryLabel),
@@ -60,6 +64,8 @@ export function agendaForDate(
       const colors = catColors(t.category);
       return {
         key: `t-${t.id}`,
+        type: "todo" as const,
+        id: t.id,
         time: "--:--",
         title: t.title,
         categoryLabel: labelFor(lang, t.category, t.customCategoryLabel),

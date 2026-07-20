@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { CheckIcon } from "@/components/ui/icons";
-import { useCreateTodo, useUpdateTodo } from "@/hooks/useTodos";
+import { useCreateTodo, useDeleteTodo, useUpdateTodo } from "@/hooks/useTodos";
 import { diffDays, fromISO, shortDateLabel } from "@/lib/dates";
 import { labelFor, t } from "@/lib/i18n";
 import { CATEGORY_COLORS, PRIORITY_COLORS } from "@/lib/theme";
@@ -64,6 +65,7 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
 
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
 
   function addTodo() {
     const trimmed = title.trim();
@@ -254,6 +256,12 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
                   >
                     {label}
                   </span>
+
+                  <DeleteButton
+                    theme={theme}
+                    ariaLabel="delete task"
+                    onClick={() => deleteTodo.mutate(todo.id)}
+                  />
                 </div>
               );
             })}
