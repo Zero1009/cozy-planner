@@ -71,9 +71,23 @@ export const events = sqliteTable("events", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+/**
+ * Per-username login throttle. One row per username (lowercased). Serverless
+ * instances share this via the database rather than in-memory state.
+ */
+export const loginAttempts = sqliteTable("login_attempts", {
+  username: text("username").primaryKey(),
+  failedCount: integer("failed_count").notNull().default(0),
+  lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
 export type Todo = typeof todos.$inferSelect;
 export type NewTodo = typeof todos.$inferInsert;
 export type EventRow = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type LoginAttempt = typeof loginAttempts.$inferSelect;
