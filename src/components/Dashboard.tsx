@@ -2,6 +2,13 @@
 
 import type { CSSProperties } from "react";
 import { dashboardStats, agendaForDate, upcomingItems } from "@/lib/agenda";
+import {
+  holidayName,
+  upcomingHolidays,
+  HOLIDAY_BORDER,
+  HOLIDAY_COLOR,
+  HOLIDAY_TINT,
+} from "@/lib/holidays";
 import { fromISO, longDateLabel } from "@/lib/dates";
 import { greeting, t } from "@/lib/i18n";
 import type { Theme } from "@/lib/theme";
@@ -20,6 +27,8 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
   const stats = dashboardStats(todayISO, todos, events);
   const todayAgenda = agendaForDate(todayISO, lang, events, todos);
   const upcoming = upcomingItems(todayISO, lang, events, todos, 6);
+  const todayHoliday = holidayName(todayISO, lang);
+  const nextHolidays = upcomingHolidays(todayISO, lang, 3);
 
   const cardStyle: CSSProperties = {
     background: theme.surface,
@@ -40,6 +49,30 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
         <p style={{ margin: "4px 0 0", fontSize: 15, color: theme.textSecondary }}>
           {longDateLabel(fromISO(todayISO), lang)}
         </p>
+        {todayHoliday && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 12,
+              padding: "10px 14px",
+              borderRadius: 14,
+              background: HOLIDAY_TINT,
+              border: `1px solid ${HOLIDAY_BORDER}`,
+            }}
+          >
+            <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>
+              🎌
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: HOLIDAY_COLOR, flexShrink: 0 }}>
+              {t(lang, "holiday")}
+            </span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: theme.textPrimary }}>
+              {todayHoliday}
+            </span>
+          </div>
+        )}
       </div>
 
       <div
@@ -253,6 +286,45 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
           </div>
         )}
       </div>
+
+      {nextHolidays.length > 0 && (
+        <div style={cardStyle}>
+          <h2 className="font-display" style={{ margin: "0 0 12px", fontSize: 17, fontWeight: 600 }}>
+            {t(lang, "upcomingHolidays")}
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {nextHolidays.map((h) => (
+              <div
+                key={h.date}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "9px 12px",
+                  borderRadius: 13,
+                  background: theme.inputBg,
+                }}
+              >
+                <span aria-hidden style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                  🎌
+                </span>
+                <span
+                  style={{
+                    fontSize: 12.5,
+                    color: HOLIDAY_COLOR,
+                    fontWeight: 700,
+                    width: 56,
+                    flexShrink: 0,
+                  }}
+                >
+                  {h.dateLabel}
+                </span>
+                <span style={{ flex: 1, fontSize: 14, color: theme.textPrimary }}>{h.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
