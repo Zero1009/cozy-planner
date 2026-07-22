@@ -1,5 +1,11 @@
-import { AppShell } from "@/components/AppShell";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
 
-export default function Page() {
-  return <AppShell />;
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  redirect("/dashboard");
 }

@@ -13,6 +13,7 @@ body {
 body {
   -webkit-font-smoothing: antialiased;
   font-family: var(--font-quicksand), system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
 input,
@@ -43,7 +44,138 @@ button {
   }
 }
 
+@keyframes cozySpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cozy-inline-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-top-color: #fffaf2;
+  border-radius: 999px;
+  display: inline-block;
+  animation: cozySpin 0.7s linear infinite;
+}
+
 /* Elements that should render in the display font (Fredoka). */
 .font-display {
   font-family: var(--font-fredoka), sans-serif;
+}
+
+.cozy-markdown {
+  overflow-wrap: anywhere;
+}
+
+.cozy-markdown > :first-child {
+  margin-top: 0;
+}
+
+.cozy-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.cozy-markdown p,
+.cozy-markdown ul,
+.cozy-markdown ol,
+.cozy-markdown blockquote,
+.cozy-markdown pre,
+.cozy-markdown table {
+  margin: 0 0 0.7em;
+}
+
+.cozy-markdown ul,
+.cozy-markdown ol {
+  padding-left: 1.25em;
+}
+
+.cozy-markdown li + li {
+  margin-top: 0.2em;
+}
+
+.cozy-markdown h1,
+.cozy-markdown h2,
+.cozy-markdown h3 {
+  margin: 0.65em 0 0.35em;
+  line-height: 1.2;
+}
+
+.cozy-markdown h1 {
+  font-size: 1.2em;
+}
+
+.cozy-markdown h2 {
+  font-size: 1.1em;
+}
+
+.cozy-markdown h3 {
+  font-size: 1em;
+}
+
+.cozy-markdown code {
+  border-radius: 7px;
+  padding: 0.1em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.cozy-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.cozy-markdown pre code {
+  display: block;
+  border: none !important;
+  padding: 0;
+  background: transparent !important;
+  white-space: pre;
+}
+
+.cozy-markdown blockquote {
+  border-left: 3px solid;
+  padding-left: 0.8em;
+}
+
+.cozy-markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.cozy-markdown th,
+.cozy-markdown td {
+  border: 1px solid;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+@media (max-width: 640px) {
+  .cozy-dialog-backdrop {
+    align-items: flex-end !important;
+    padding: 10px !important;
+  }
+
+  .cozy-dialog-card {
+    max-width: none !important;
+    width: 100% !important;
+    max-height: 88vh !important;
+    border-radius: 22px 22px 18px 18px !important;
+    padding: 18px !important;
+  }
+
+  .cozy-admin-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cozy-user-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
 }

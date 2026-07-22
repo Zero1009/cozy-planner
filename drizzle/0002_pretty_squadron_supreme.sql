@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `must_update_profile` integer DEFAULT true NOT NULL;

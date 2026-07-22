@@ -59,6 +59,7 @@ export const updateEventSchema = z
 /** AI chat request: a short rolling transcript plus the active language. */
 export const chatSchema = z.object({
   lang: z.enum(["th", "en"]).default("th"),
+  clientToday: isoDate.optional(),
   messages: z
     .array(
       z.object({

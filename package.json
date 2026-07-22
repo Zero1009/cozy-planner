@@ -7,12 +7,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "user:create": "tsx scripts/create-user.ts",
+    "test": "tsx --test src/**/*.test.ts",
+    "e2e:setup": "tsx scripts/e2e-setup.ts",
+    "e2e:cleanup": "tsx scripts/e2e-cleanup.ts",
+    "e2e": "sh -c 'playwright test \"$@\"; ec=$?; npm run e2e:cleanup; exit $ec' --"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
@@ -22,13 +27,20 @@
     "openai": "^4.77.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "drizzle-kit": "^0.30.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.11",
     "tsx": "^4.19.2",
     "typescript": "^5.7.0"
   }
