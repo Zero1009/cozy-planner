@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { TimePicker } from "@/components/ui/TimePicker";
@@ -80,6 +80,7 @@ export function CalendarView({
 }: CalendarViewProps) {
   const deleteEvent = useDeleteEvent();
   const deleteTodo = useDeleteTodo();
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
 
   function deleteItem(item: AgendaItem) {
     if (item.type === "event") deleteEvent.mutate(item.id);
@@ -124,7 +125,7 @@ export function CalendarView({
     background: theme.surface,
     border: `1px solid ${theme.borderColor}`,
     borderRadius: 18,
-    padding: 18,
+    padding: isDesktop ? 18 : 12,
   };
 
   const showSidePanel = calView === "month" || calView === "week";
@@ -140,13 +141,21 @@ export function CalendarView({
           gap: 10,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isDesktop ? 10 : 6, minWidth: 0, width: isDesktop ? undefined : "100%" }}>
           <IconButton theme={theme} onClick={goPrev} label="prev">
             <ChevronLeftIcon size={13} />
           </IconButton>
           <h1
             className="font-display"
-            style={{ margin: 0, fontSize: 19, fontWeight: 600, minWidth: 150 }}
+            style={{
+              margin: 0,
+              fontSize: isDesktop ? 19 : 17,
+              fontWeight: 600,
+              minWidth: 0,
+              flex: 1,
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
           >
             {periodLabel}
           </h1>
@@ -157,7 +166,7 @@ export function CalendarView({
             type="button"
             onClick={onToday}
             style={{
-              padding: "7px 14px",
+              padding: isDesktop ? "7px 14px" : "7px 10px",
               borderRadius: 11,
               border: `1px solid ${theme.borderColor}`,
               background: theme.chipBg,
@@ -223,6 +232,7 @@ export function CalendarView({
               todos={todos}
               onSelect={selectCell}
               cardStyle={cardStyle}
+              isDesktop={isDesktop}
             />
           )}
           {calView === "week" && (
@@ -238,15 +248,26 @@ export function CalendarView({
             />
           )}
           {calView === "day" && (
-            <DayAgenda
-              theme={theme}
-              lang={lang}
-              selectedDate={selectedDate}
-              events={events}
-              todos={todos}
-              cardStyle={cardStyle}
-              onDelete={deleteItem}
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <DayAgenda
+                theme={theme}
+                lang={lang}
+                selectedDate={selectedDate}
+                events={events}
+                todos={todos}
+                cardStyle={cardStyle}
+                onDelete={deleteItem}
+              />
+              {isDesktop && (
+                <AddEventForm
+                  theme={theme}
+                  lang={lang}
+                  selectedDate={selectedDate}
+                  cardStyle={cardStyle}
+                  variant="panel"
+                />
+              )}
+            </div>
           )}
         </div>
 
@@ -261,10 +282,54 @@ export function CalendarView({
               cardStyle={cardStyle}
               onDelete={deleteItem}
             />
-            <AddEventForm theme={theme} lang={lang} selectedDate={selectedDate} cardStyle={cardStyle} />
+            {isDesktop && (
+              <AddEventForm
+                theme={theme}
+                lang={lang}
+                selectedDate={selectedDate}
+                cardStyle={cardStyle}
+                variant="panel"
+              />
+            )}
           </div>
         )}
       </div>
+
+      {!isDesktop && (
+        <button
+          type="button"
+          onClick={() => setAddSheetOpen(true)}
+          style={{
+            position: "sticky",
+            bottom: "calc(78px + env(safe-area-inset-bottom))",
+            zIndex: 11,
+            width: "100%",
+            padding: "13px 16px",
+            borderRadius: 16,
+            border: "none",
+            background: theme.accentBg,
+            color: "white",
+            boxShadow: "0 10px 24px oklch(20% 0.02 90 / 0.22)",
+            fontSize: 15,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          {t(lang, "addEventCta")}
+        </button>
+      )}
+
+      {!isDesktop && addSheetOpen && (
+        <AddEventForm
+          theme={theme}
+          lang={lang}
+          selectedDate={selectedDate}
+          cardStyle={cardStyle}
+          variant="sheet"
+          onClose={() => setAddSheetOpen(false)}
+          onDone={() => setAddSheetOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -319,6 +384,7 @@ function MonthGrid({
   todos,
   onSelect,
   cardStyle,
+  isDesktop,
 }: {
   theme: Theme;
   lang: Lang;
@@ -328,6 +394,7 @@ function MonthGrid({
   events: CalEvent[];
   todos: Todo[];
   onSelect: (iso: string, inMonth: boolean) => void;
+  isDesktop: boolean;
 } & CardStyleProp) {
   const cells = buildMonthCells(calRefDate);
   const dow = dowShort(lang);
@@ -337,9 +404,9 @@ function MonthGrid({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 4,
-          marginBottom: 6,
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          gap: isDesktop ? 4 : 2,
+          marginBottom: isDesktop ? 6 : 4,
         }}
       >
         {dow.map((d) => (
@@ -347,7 +414,7 @@ function MonthGrid({
             key={d}
             style={{
               textAlign: "center",
-              fontSize: 12,
+              fontSize: isDesktop ? 12 : 11,
               fontWeight: 700,
               color: theme.textMuted,
               padding: "4px 0",
@@ -358,7 +425,7 @@ function MonthGrid({
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isDesktop ? 4 : 2 }}>
         {cells.map((cell) => {
           const isToday = cell.iso === todayISO;
           const isSelected = cell.iso === selectedDate;
@@ -370,8 +437,9 @@ function MonthGrid({
               onClick={() => onSelect(cell.iso, cell.inMonth)}
               style={{
                 aspectRatio: "1",
-                minHeight: 40,
-                borderRadius: 11,
+                minWidth: 0,
+                minHeight: isDesktop ? 40 : 34,
+                borderRadius: isDesktop ? 11 : 9,
                 border: isSelected
                   ? "none"
                   : isToday
@@ -380,15 +448,15 @@ function MonthGrid({
                 background: isSelected ? theme.accentBg : "transparent",
                 color: isSelected ? "white" : cell.inMonth ? theme.textPrimary : theme.textMuted,
                 opacity: cell.inMonth ? 1 : 0.45,
-                fontSize: 13,
+                fontSize: isDesktop ? 13 : 12,
                 fontWeight: isToday || isSelected ? 700 : 500,
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 3,
-                padding: 2,
+                gap: isDesktop ? 3 : 2,
+                padding: 0,
               }}
             >
               <span>{cell.dayNum}</span>
@@ -653,85 +721,189 @@ function AddEventForm({
   lang,
   selectedDate,
   cardStyle,
+  variant,
+  onClose,
+  onDone,
 }: {
   theme: Theme;
   lang: Lang;
   selectedDate: string;
+  variant: "panel" | "sheet";
+  onClose?: () => void;
+  onDone?: () => void;
 } & CardStyleProp) {
   const [category, setCategory] = useState<Category>("personal");
   const [customLabel, setCustomLabel] = useState("");
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("09:00");
+  const [justAdded, setJustAdded] = useState(false);
 
   const createEvent = useCreateEvent();
+  const trimmedTitle = title.trim();
+  const canSubmit = trimmedTitle.length > 0 && !createEvent.isPending;
+
+  useEffect(() => {
+    if (!justAdded) return;
+    const timer = window.setTimeout(() => setJustAdded(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [justAdded]);
+
+  useEffect(() => {
+    if (variant !== "sheet" || !onClose) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose?.();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose, variant]);
 
   function submit() {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    createEvent.mutate({
-      title: trimmed,
-      category,
-      customCategoryLabel: category === "other" ? customLabel.trim() || undefined : undefined,
-      date: selectedDate,
-      time,
-    });
-    setTitle("");
-    setCustomLabel("");
+    if (!canSubmit) return;
+    createEvent.mutate(
+      {
+        title: trimmedTitle,
+        category,
+        customCategoryLabel: category === "other" ? customLabel.trim() || undefined : undefined,
+        date: selectedDate,
+        time,
+      },
+      {
+        onSuccess: () => {
+          setTitle("");
+          setCustomLabel("");
+          setJustAdded(true);
+          onDone?.();
+        },
+      }
+    );
+  }
+
+  const feedback = createEvent.isError ? (
+    <p style={{ margin: 0, color: "oklch(56% 0.16 28)", fontSize: 12.5, fontWeight: 700 }}>
+      {createEvent.error instanceof Error
+        ? createEvent.error.message
+        : lang === "th"
+          ? "เพิ่มนัดหมายไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+          : "Could not add the event. Please try again."}
+    </p>
+  ) : justAdded ? (
+    <p style={{ margin: 0, color: theme.accentDark, fontSize: 12.5, fontWeight: 800 }}>
+      {t(lang, "eventAdded")}
+    </p>
+  ) : null;
+
+  const form = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
+          {t(lang, "addEvent")}
+        </h2>
+        <p style={{ margin: "4px 0 0", color: theme.textMuted, fontSize: 13, fontWeight: 700 }}>
+          {shortDateLabel(fromISO(selectedDate), lang)}
+        </p>
+      </div>
+      <CategoryChips
+        theme={theme}
+        lang={lang}
+        value={category}
+        onChange={setCategory}
+        customLabel={customLabel}
+        onCustomLabelChange={setCustomLabel}
+      />
+      <input
+        value={title}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          setJustAdded(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") submit();
+        }}
+        placeholder={t(lang, "eventTitlePlaceholder")}
+        autoFocus={variant === "sheet"}
+        style={{
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: `1px solid ${theme.borderColor}`,
+          background: theme.inputBg,
+          color: theme.textPrimary,
+          fontSize: 14,
+          outline: "none",
+        }}
+      />
+      <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TimePicker theme={theme} value={time} onChange={setTime} />
+        </div>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!canSubmit}
+          style={{
+            minWidth: 96,
+            padding: "0 14px",
+            borderRadius: 12,
+            border: "none",
+            background: theme.accentBg,
+            color: "white",
+            fontSize: 13.5,
+            fontWeight: 800,
+            cursor: canSubmit ? "pointer" : "default",
+            opacity: canSubmit ? 1 : 0.58,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          {createEvent.isPending && <span className="cozy-inline-spinner" aria-hidden />}
+          {createEvent.isPending ? t(lang, "saving") : t(lang, "addTask")}
+        </button>
+      </div>
+      {feedback}
+    </div>
+  );
+
+  if (variant === "sheet") {
+    return (
+      <div className="cozy-dialog-backdrop" onClick={onClose}>
+        <div
+          className="cozy-dialog-card"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t(lang, "addEvent")}
+          onClick={(event) => event.stopPropagation()}
+          style={{ ...cardStyle, maxWidth: 460, width: "min(460px, calc(100vw - 20px))" }}
+        >
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t(lang, "close")}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 999,
+                border: `1px solid ${theme.borderColor}`,
+                background: theme.inputBg,
+                color: theme.textPrimary,
+                fontSize: 18,
+                fontWeight: 800,
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          </div>
+          {form}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div style={cardStyle}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <CategoryChips
-          theme={theme}
-          lang={lang}
-          value={category}
-          onChange={setCategory}
-          customLabel={customLabel}
-          onCustomLabelChange={setCustomLabel}
-        />
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
-          }}
-          placeholder={t(lang, "eventTitlePlaceholder")}
-          style={{
-            padding: "9px 12px",
-            borderRadius: 11,
-            border: `1px solid ${theme.borderColor}`,
-            background: theme.inputBg,
-            color: theme.textPrimary,
-            fontSize: 14,
-            outline: "none",
-          }}
-        />
-        <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ flex: 1 }}>
-            <TimePicker theme={theme} value={time} onChange={setTime} />
-          </div>
-          <button
-            type="button"
-            onClick={submit}
-            aria-label="add event"
-            style={{
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-              borderRadius: 11,
-              border: "none",
-              background: theme.accentBg,
-              color: "white",
-              fontSize: 20,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      {form}
     </div>
   );
 }

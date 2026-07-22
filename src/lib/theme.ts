@@ -6,23 +6,23 @@ export interface CatColor {
   dot: string;
 }
 
-/** Soft oklch swatches per category — ported verbatim from the design mockup. */
+/** Soft icon-inspired swatches: warm cocoa, blush coral, planner sage, and tea amber. */
 export const CATEGORY_COLORS: Record<Category, CatColor> = {
-  personal: { bg: "oklch(93% 0.035 350)", color: "oklch(42% 0.09 350)", dot: "oklch(65% 0.1 350)" },
-  work: { bg: "oklch(93% 0.03 35)", color: "oklch(42% 0.1 35)", dot: "oklch(62% 0.15 35)" },
-  health: { bg: "oklch(93% 0.02 230)", color: "oklch(40% 0.06 230)", dot: "oklch(65% 0.08 230)" },
-  study: { bg: "oklch(93% 0.02 300)", color: "oklch(42% 0.06 300)", dot: "oklch(65% 0.09 300)" },
-  other: { bg: "oklch(94% 0.008 60)", color: "oklch(45% 0.01 60)", dot: "oklch(70% 0.01 60)" },
-  shift: { bg: "oklch(92% 0.03 265)", color: "oklch(42% 0.1 265)", dot: "oklch(60% 0.13 265)" },
+  personal: { bg: "oklch(94% 0.035 28)", color: "oklch(44% 0.1 28)", dot: "oklch(68% 0.15 28)" },
+  work: { bg: "oklch(92% 0.025 155)", color: "oklch(38% 0.06 155)", dot: "oklch(58% 0.08 155)" },
+  health: { bg: "oklch(93% 0.03 130)", color: "oklch(38% 0.06 130)", dot: "oklch(62% 0.09 130)" },
+  study: { bg: "oklch(94% 0.04 78)", color: "oklch(44% 0.08 72)", dot: "oklch(72% 0.14 78)" },
+  other: { bg: "oklch(95% 0.018 72)", color: "oklch(45% 0.035 60)", dot: "oklch(70% 0.05 68)" },
+  shift: { bg: "oklch(93% 0.026 190)", color: "oklch(38% 0.06 190)", dot: "oklch(60% 0.09 190)" },
 };
 
 export const PRIORITY_COLORS: Record<Priority, string> = {
-  high: "oklch(58% 0.16 25)",
-  med: "oklch(62% 0.15 35)",
-  low: "oklch(70% 0.01 60)",
+  high: "oklch(66% 0.16 28)",
+  med: "oklch(72% 0.14 78)",
+  low: "oklch(62% 0.08 155)",
 };
 
-const THEME_HUES: Record<ThemeColor, number> = { amber: 95, sky: 230, berry: 340 };
+const THEME_HUES: Record<ThemeColor, number> = { amber: 78, sky: 155, berry: 28 };
 
 export interface Theme {
   accentBg: string;
@@ -48,21 +48,21 @@ export function buildTheme(themeColor: ThemeColor, darkMode: boolean): Theme {
   const hue = THEME_HUES[themeColor] ?? 95;
   const dark = darkMode;
 
-  const accentBg = dark ? `oklch(66% 0.14 ${hue})` : `oklch(62% 0.13 ${hue})`;
-  const accentDark = dark ? `oklch(56% 0.13 ${hue})` : `oklch(50% 0.13 ${hue})`;
-  const accentTint = dark ? `oklch(30% 0.06 ${hue})` : `oklch(93% 0.04 ${hue})`;
-  const surface = dark ? "oklch(23% 0.015 90)" : "oklch(99% 0.012 92)";
-  const textPrimary = dark ? "oklch(93% 0.01 90)" : "oklch(24% 0.02 50)";
-  const textSecondary = dark ? "oklch(74% 0.015 90)" : "oklch(48% 0.02 55)";
-  const textMuted = dark ? "oklch(56% 0.015 90)" : "oklch(65% 0.015 60)";
-  const borderColor = dark ? "oklch(33% 0.015 90)" : "oklch(88% 0.025 95)";
-  const inputBg = dark ? "oklch(27% 0.015 90)" : "oklch(96% 0.018 95)";
-  const chipBg = dark ? "oklch(30% 0.015 90)" : "oklch(93% 0.02 90)";
-  const divider = dark ? "oklch(30% 0.015 90)" : "oklch(92% 0.015 70)";
+  const accentBg = dark ? `oklch(66% 0.12 ${hue})` : `oklch(64% 0.12 ${hue})`;
+  const accentDark = dark ? `oklch(56% 0.11 ${hue})` : `oklch(45% 0.1 ${hue})`;
+  const accentTint = dark ? `oklch(30% 0.05 ${hue})` : `oklch(92% 0.04 ${hue})`;
+  const surface = dark ? "oklch(23% 0.018 62)" : "oklch(99% 0.017 78)";
+  const textPrimary = dark ? "oklch(94% 0.012 72)" : "oklch(27% 0.045 45)";
+  const textSecondary = dark ? "oklch(76% 0.02 72)" : "oklch(48% 0.04 55)";
+  const textMuted = dark ? "oklch(58% 0.02 72)" : "oklch(63% 0.035 62)";
+  const borderColor = dark ? "oklch(34% 0.02 62)" : "oklch(88% 0.035 75)";
+  const inputBg = dark ? "oklch(27% 0.018 62)" : "oklch(96% 0.026 78)";
+  const chipBg = dark ? "oklch(30% 0.02 62)" : "oklch(94% 0.03 76)";
+  const divider = dark ? "oklch(31% 0.02 62)" : "oklch(91% 0.026 70)";
 
   const rootBg = dark
-    ? `radial-gradient(ellipse 620px 380px at 88% -8%, oklch(32% 0.06 220 / 0.35), transparent 60%), radial-gradient(ellipse 460px 300px at -8% 18%, oklch(30% 0.06 ${hue} / 0.35), transparent 60%), linear-gradient(180deg, oklch(15% 0.014 90) 0%, oklch(12% 0.01 90) 100%)`
-    : `radial-gradient(ellipse 620px 380px at 88% -8%, oklch(90% 0.04 220 / 0.35), transparent 60%), radial-gradient(ellipse 460px 300px at -8% 18%, oklch(90% 0.045 ${hue} / 0.35), transparent 60%), linear-gradient(180deg, oklch(96% 0.025 100) 0%, oklch(97% 0.016 90) 100%)`;
+    ? `radial-gradient(ellipse 620px 380px at 88% -8%, oklch(34% 0.055 155 / 0.35), transparent 60%), radial-gradient(ellipse 460px 300px at -8% 18%, oklch(32% 0.06 28 / 0.32), transparent 60%), linear-gradient(180deg, oklch(16% 0.018 62) 0%, oklch(12% 0.014 55) 100%)`
+    : `radial-gradient(ellipse 620px 380px at 88% -8%, oklch(91% 0.035 155 / 0.38), transparent 60%), radial-gradient(ellipse 460px 300px at -8% 18%, oklch(90% 0.055 28 / 0.35), transparent 60%), linear-gradient(180deg, oklch(97% 0.035 82) 0%, oklch(96% 0.025 68) 100%)`;
 
   return {
     accentBg,

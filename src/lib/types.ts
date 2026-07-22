@@ -1,4 +1,5 @@
 import type { CATEGORIES, PRIORITIES } from "@/db/schema";
+import type { AiAction } from "@/lib/ai-actions";
 
 export type Category = (typeof CATEGORIES)[number];
 export type Priority = (typeof PRIORITIES)[number];
@@ -34,6 +35,7 @@ export interface CalEvent {
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  actions?: AiAction[];
 }
 
 /** UI preferences persisted client-side (localStorage), not in the DB. */

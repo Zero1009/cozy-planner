@@ -133,3 +133,16 @@ export function GearIcon({ size = 16, style }: IconProps) {
     </svg>
   );
 }
+
+export function MenuIcon({ size = 18, style }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" style={style} aria-hidden>
+      <path
+        d="M3 5h12M3 9h12M3 13h12"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

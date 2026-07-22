@@ -12,7 +12,7 @@ import type { Lang, Prefs, ThemeColor } from "@/lib/types";
 
 const DEFAULT_PREFS: Prefs = {
   lang: "th",
-  themeColor: "amber",
+  themeColor: "sky",
   darkMode: false,
 };
 

@@ -7,6 +7,7 @@ assistant. Built as a real app from the "Calendar TODO App" design mockup.
 - **Calendar** — month / week / day views, add events with categories, a time picker, and a per-day agenda.
 - **To-Do** — quick add, categories, priority, and All / Today / Upcoming / Completed filters.
 - **AI Assistant** — a warm, concise helper that can summarize your tasks and tell you what's on today (powered by Groq).
+- **Private access** — login-only app; TRK creates accounts from the terminal (no public registration).
 - Light/dark mode, three accent themes (amber / sky / berry), responsive (desktop sidebar / mobile bottom nav).
 
 ## Tech stack
@@ -38,6 +39,7 @@ src/
     page.tsx            # renders <AppShell/>
     globals.css
     api/
+      auth/login  auth/logout  auth/me   # cookie-session authentication
       todos/route.ts        todos/[id]/route.ts     # REST for todos
       events/route.ts       events/[id]/route.ts    # REST for events
       ai/route.ts           # chat → Groq, grounded in your live data
@@ -54,13 +56,14 @@ drizzle/                # generated SQL migrations
 
 **Layering:** Zod schemas at the API boundary are the single source of truth for
 input shape; Drizzle owns persistence; TanStack Query owns client cache +
-optimistic updates. UI preferences (language, theme, dark mode) live in
-`localStorage`, not the database.
+optimistic updates. Auth is a simple first-party username/password flow backed
+by scrypt password hashes and an httpOnly signed session cookie. UI preferences
+(language, theme, dark mode) live in `localStorage`, not the database.
 
-> **Data model note:** this is a single shared workspace (no auth) — appropriate
-> for a small trusted group. The schema and query layer are structured so a
-> `userId`/owner column and auth can be layered on later without reshaping the
-> app.
+> **Data model note:** authentication gates access to the app, but todos/events
+> remain a single shared workspace for trusted users. The schema and query layer
+> can still be extended with a `userId`/owner column later if per-user private
+> calendars are needed.
 
 ## Local development
 
@@ -75,7 +78,10 @@ cp .env.example .env        # TURSO_DATABASE_URL defaults to file:local.db
 npm run db:migrate
 npm run db:seed
 
-# 4. Run
+# 4. Create your first login (no in-app registration)
+npm run user:create -- trk "choose-a-strong-password" "TRK" --admin
+
+# 5. Run
 npm run dev                 # http://localhost:3000
 ```
 
@@ -93,6 +99,7 @@ the assistant returns a friendly "can't connect" message.
 | `npm run db:generate` | Regenerate SQL migrations from `schema.ts`     |
 | `npm run db:migrate`  | Apply migrations to the target DB              |
 | `npm run db:seed`     | Reset + seed sample todos/events (dev only)    |
+| `npm run user:create` | Create a login account from the terminal       |
 
 ## Continuous integration
 
@@ -130,7 +137,7 @@ Create one at https://console.groq.com/keys → `GROQ_API_KEY`.
 
 ### 3. Deploy on Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FZero1009%2Fcozy-planner&env=TURSO_DATABASE_URL,TURSO_AUTH_TOKEN,GROQ_API_KEY,GROQ_MODEL&envDescription=Turso%20DB%20URL%2Ftoken%20and%20Groq%20API%20key)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FZero1009%2Fcozy-planner&env=TURSO_DATABASE_URL,TURSO_AUTH_TOKEN,AUTH_SECRET,GROQ_API_KEY,GROQ_MODEL&envDescription=Turso%20DB%20URL%2Ftoken%2C%20auth%20secret%2C%20and%20Groq%20API%20key)
 
 Or import the repo manually (New Project → import `Zero1009/cozy-planner`). Set
 these Environment Variables for **Production + Preview**:
@@ -139,6 +146,7 @@ these Environment Variables for **Production + Preview**:
 | --------------------- | ------------------------------------------ |
 | `TURSO_DATABASE_URL`  | `libsql://your-db.turso.io`                |
 | `TURSO_AUTH_TOKEN`    | your Turso token                           |
+| `AUTH_SECRET`         | random secret from `openssl rand -base64 32` |
 | `GROQ_API_KEY`        | your Groq key                              |
 | `GROQ_MODEL`          | `openai/gpt-oss-120b` (or any Groq model)  |
 

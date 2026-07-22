@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-const BREAKPOINT = 900;
+const BREAKPOINT = 1024;
 
 /**
- * True when viewport width >= 900px. Defaults to `true` for SSR/first paint
- * (desktop-first) and corrects itself after mount via a resize listener, so
- * it's fine for this to flip once the client settles.
+ * True when viewport width >= 1024px. Defaults mobile-first so small screens
+ * never get a desktop top bar/sidebar flash before hydration.
  */
 export function useIsDesktop(): boolean {
-  const [isDesktop, setIsDesktop] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia(`(min-width: ${BREAKPOINT}px)`);

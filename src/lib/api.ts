@@ -17,7 +17,13 @@ async function parseErrorMessage(res: Response): Promise<string> {
   } catch {
     /* body wasn't JSON */
   }
-  return `Request failed with status ${res.status}`;
+  if (res.status >= 500) {
+    return "ระบบมีปัญหาชั่วคราว กรุณาลองใหม่อีกครั้ง หรือติดต่อ TRK ให้ตรวจการตั้งค่าเซิร์ฟเวอร์";
+  }
+  if (res.status === 401) return "กรุณาเข้าสู่ระบบก่อนใช้งาน";
+  if (res.status === 403) return "บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้";
+  if (res.status === 404) return "ไม่พบข้อมูลที่ต้องการ";
+  return `ทำรายการไม่สำเร็จ (รหัส ${res.status})`;
 }
 
 async function handle<T>(res: Response): Promise<T> {
