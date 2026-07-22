@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Typecheck & build
+  test:
+    name: Typecheck, unit tests & build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +29,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build
         run: npm run build
         env:
@@ -37,3 +40,25 @@ jobs:
           # DB client falls back to a local file when unset. Real secrets live
           # in Vercel, not in CI.
           TURSO_DATABASE_URL: "file:ci.db"
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        # playwright.config.ts spins up its own dev server (with a throwaway
+        # SQLite db + test AUTH_SECRET) via `webServer`, so no extra env here.
+        run: npm run e2e
