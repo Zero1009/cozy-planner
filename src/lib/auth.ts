@@ -28,6 +28,17 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
+// A dummy hash computed once on first use, so a login attempt for a
+// non-existent user still performs an equivalent scrypt comparison. This keeps
+// response timing similar whether or not the username exists, defeating
+// username enumeration via timing. Always resolves false.
+let dummyHashPromise: Promise<string> | null = null;
+export async function dummyVerify(password: string): Promise<false> {
+  if (!dummyHashPromise) dummyHashPromise = hashPassword("cozy-planner::timing-safe::dummy");
+  await verifyPassword(password, await dummyHashPromise);
+  return false;
+}
+
 export function isAcceptablePassword(password: string): boolean {
   const trimmed = password.trim();
   if (trimmed.length < 8) return false;
