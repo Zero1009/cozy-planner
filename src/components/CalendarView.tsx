@@ -8,6 +8,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { useCreateEvent, useDeleteEvent } from "@/hooks/useEvents";
 import { useDeleteTodo } from "@/hooks/useTodos";
 import { agendaForDate, dotsForDate, type AgendaItem } from "@/lib/agenda";
+import { holidayName, HOLIDAY_BORDER, HOLIDAY_COLOR, HOLIDAY_TINT } from "@/lib/holidays";
 import {
   addDays,
   addMonths,
@@ -374,6 +375,55 @@ interface CardStyleProp {
   cardStyle: CSSProperties;
 }
 
+/** Shows a warm-tinted banner naming the Thai public holiday on `dateISO`. */
+function HolidayBanner({
+  theme,
+  lang,
+  dateISO,
+  compact,
+}: {
+  theme: Theme;
+  lang: Lang;
+  dateISO: string;
+  compact?: boolean;
+}) {
+  const name = holidayName(dateISO, lang);
+  if (!name) return null;
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: compact ? "7px 10px" : "9px 12px",
+        borderRadius: compact ? 11 : 13,
+        background: HOLIDAY_TINT,
+        border: `1px solid ${HOLIDAY_BORDER}`,
+        marginBottom: compact ? 8 : 10,
+      }}
+    >
+      <span aria-hidden style={{ fontSize: compact ? 13 : 15, lineHeight: 1 }}>
+        🎌
+      </span>
+      <span style={{ fontSize: compact ? 12 : 13, fontWeight: 800, color: HOLIDAY_COLOR, flexShrink: 0 }}>
+        {t(lang, "holiday")}
+      </span>
+      <span
+        style={{
+          fontSize: compact ? 12.5 : 13.5,
+          color: theme.textPrimary,
+          fontWeight: 600,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {name}
+      </span>
+    </div>
+  );
+}
+
 function MonthGrid({
   theme,
   lang,
@@ -430,11 +480,13 @@ function MonthGrid({
           const isToday = cell.iso === todayISO;
           const isSelected = cell.iso === selectedDate;
           const dots = dotsForDate(cell.iso, events, todos);
+          const hol = holidayName(cell.iso, lang);
           return (
             <button
               key={cell.iso}
               type="button"
               onClick={() => onSelect(cell.iso, cell.inMonth)}
+              title={hol ?? undefined}
               style={{
                 aspectRatio: "1",
                 minWidth: 0,
@@ -459,8 +511,26 @@ function MonthGrid({
                 padding: 0,
               }}
             >
-              <span>{cell.dayNum}</span>
+              <span
+                style={{
+                  color: isSelected ? "white" : hol && cell.inMonth ? HOLIDAY_COLOR : undefined,
+                  fontWeight: hol && !isSelected ? 700 : undefined,
+                }}
+              >
+                {cell.dayNum}
+              </span>
               <span style={{ display: "flex", gap: 2 }}>
+                {hol && (
+                  <span
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      background: isSelected ? "white" : HOLIDAY_COLOR,
+                      display: "inline-block",
+                    }}
+                  />
+                )}
                 {dots.map((c, i) => (
                   <span
                     key={i}
@@ -515,6 +585,7 @@ function WeekGrid({
         const isToday = iso === todayISO;
         const isSelected = iso === selectedDate;
         const items = agendaForDate(iso, lang, events, todos).slice(0, 3);
+        const hol = holidayName(iso, lang);
         const d = fromISO(iso);
         return (
           <button
@@ -542,6 +613,24 @@ function WeekGrid({
               <div style={{ fontSize: 16, fontWeight: 700, color: theme.textPrimary }}>{d.getDate()}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              {hol && (
+                <span
+                  title={hol}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "3px 7px",
+                    borderRadius: 8,
+                    background: HOLIDAY_TINT,
+                    color: HOLIDAY_COLOR,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  🎌 {hol}
+                </span>
+              )}
               {items.map((item) => (
                 <span
                   key={item.key}
@@ -590,6 +679,7 @@ function DayAgenda({
       <h2 className="font-display" style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600 }}>
         {shortDateLabel(fromISO(selectedDate), lang)}
       </h2>
+      <HolidayBanner theme={theme} lang={lang} dateISO={selectedDate} />
       {items.length === 0 ? (
         <p style={{ color: theme.textMuted, fontSize: 14, margin: "8px 0" }}>
           {t(lang, "noItemsToday")}
@@ -669,6 +759,7 @@ function SidePanelAgenda({
       <h2 className="font-display" style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 600 }}>
         {shortDateLabel(fromISO(selectedDate), lang)}
       </h2>
+      <HolidayBanner theme={theme} lang={lang} dateISO={selectedDate} compact />
       {items.length === 0 ? (
         <p style={{ color: theme.textMuted, fontSize: 13.5, margin: "6px 0" }}>
           {t(lang, "noItemsToday")}
