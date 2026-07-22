@@ -33,6 +33,12 @@ export const users = sqliteTable("users", {
 
 export const todos = sqliteTable("todos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  // Owner. `default(1)` only backfills any pre-existing shared rows to the
+  // first user during migration; the app always sets this explicitly on insert.
+  userId: integer("user_id")
+    .notNull()
+    .default(1)
+    .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   category: text("category").notNull().default("other"),
   customCategoryLabel: text("custom_category_label"),
@@ -47,6 +53,10 @@ export const todos = sqliteTable("todos", {
 
 export const events = sqliteTable("events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .default(1)
+    .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   category: text("category").notNull().default("personal"),
   customCategoryLabel: text("custom_category_label"),

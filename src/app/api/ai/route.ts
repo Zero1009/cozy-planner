@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { CATEGORIES } from "@/db/schema";
@@ -52,8 +52,16 @@ async function buildSystemPrompt(lang: Lang, user: CurrentUser, clientToday?: st
   const todayISO = clientToday ?? toISO(new Date());
 
   const [allTodos, allEvents] = await Promise.all([
-    db.select().from(schema.todos).orderBy(asc(schema.todos.due)),
-    db.select().from(schema.events).orderBy(asc(schema.events.date), asc(schema.events.time)),
+    db
+      .select()
+      .from(schema.todos)
+      .where(eq(schema.todos.userId, user.id))
+      .orderBy(asc(schema.todos.due)),
+    db
+      .select()
+      .from(schema.events)
+      .where(eq(schema.events.userId, user.id))
+      .orderBy(asc(schema.events.date), asc(schema.events.time)),
   ]);
 
   const pending = allTodos.filter((t) => !t.done);

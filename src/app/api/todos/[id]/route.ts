@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db/client";
 import { serializeTodo } from "@/lib/serialize";
@@ -13,7 +13,8 @@ interface Ctx {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -32,10 +33,11 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     );
   }
 
+  // Scope by owner: a row belonging to another user is treated as not found.
   const [row] = await db
     .update(schema.todos)
     .set(parsed.data)
-    .where(eq(schema.todos.id, idNum))
+    .where(and(eq(schema.todos.id, idNum), eq(schema.todos.userId, user.id)))
     .returning();
 
   if (!row) {
@@ -46,7 +48,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -56,6 +59,8 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  await db.delete(schema.todos).where(eq(schema.todos.id, idNum));
+  await db
+    .delete(schema.todos)
+    .where(and(eq(schema.todos.id, idNum), eq(schema.todos.userId, user.id)));
   return NextResponse.json({ ok: true });
 }
