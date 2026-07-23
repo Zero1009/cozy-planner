@@ -150,14 +150,16 @@ these Environment Variables for **Production + Preview**:
 | `GROQ_API_KEY`        | your Groq key                              |
 | `GROQ_MODEL`          | `openai/gpt-oss-120b` (or any Groq model)  |
 
-The default build command (`next build`) is all Vercel needs — migrations were
-applied in step 1, so no DB credentials are required at build time. Once the
-GitHub repo is connected, every push builds a Preview and merges to the
-production branch deploy automatically.
+Vercel runs the `vercel-build` script, which **applies pending migrations
+automatically on production deploys** (`scripts/deploy-migrate.ts`) before
+`next build`. So a schema change ships by merging to `main` — no manual
+migration step. This requires `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` to be
+available at build time (the default for Vercel env vars). Preview and CI builds
+skip auto-migration (`VERCEL_ENV !== "production"`).
 
-> **Note:** the schema lives in Turso, so run `npm run db:migrate` against your
-> Turso URL whenever you change `src/db/schema.ts` (regenerate first with
-> `npm run db:generate`).
+> Regenerate SQL after editing `src/db/schema.ts` with `npm run db:generate` and
+> commit the `drizzle/` files; the deploy applies them. To migrate a database by
+> hand (local or another environment), run `npm run db:migrate`.
 
 ## License
 
