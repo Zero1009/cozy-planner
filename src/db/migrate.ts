@@ -1,23 +1,15 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import { runMigrations } from "./run-migrations";
 
 /**
- * Applies generated migrations from ./drizzle. Run with `npm run db:migrate`
- * after `npm run db:generate`. Safe to run repeatedly (idempotent).
+ * CLI entry: `npm run db:migrate` (after `npm run db:generate`).
+ * Applies migrations to the target database. Idempotent.
  */
-async function main() {
-  const client = createClient({
-    url: process.env.TURSO_DATABASE_URL ?? "file:local.db",
-    authToken: process.env.TURSO_AUTH_TOKEN,
+runMigrations()
+  .then(() => {
+    console.log("✓ migrations applied");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
   });
-  const db = drizzle(client);
-  await migrate(db, { migrationsFolder: "./drizzle" });
-  console.log("✓ migrations applied");
-  client.close();
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
