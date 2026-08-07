@@ -221,13 +221,14 @@ export function AppShell({ currentUser }: AppShellProps) {
           {loadingPlannerData && (
             <div
               style={{
-                minHeight: isDesktop ? 360 : 260,
+                minHeight: isDesktop ? 360 : 180,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                padding: isDesktop ? 0 : "0 12px",
               }}
             >
-              <CozyLoading message="กำลังโหลดตารางและรายการของคุณ..." />
+              <CozyLoading message="กำลังโหลดตารางและรายการของคุณ..." compact={!isDesktop} />
             </div>
           )}
           {!loadingPlannerData && view === "dashboard" && (
