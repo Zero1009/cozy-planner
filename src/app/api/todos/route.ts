@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db/client";
 import { serializeTodo } from "@/lib/serialize";
@@ -9,19 +9,22 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const rows = await db
     .select()
     .from(schema.todos)
+    .where(eq(schema.todos.userId, user.id))
     .orderBy(asc(schema.todos.due), asc(schema.todos.id));
   return NextResponse.json(rows.map(serializeTodo));
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -34,6 +37,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const [row] = await db.insert(schema.todos).values(parsed.data).returning();
+  const [row] = await db.insert(schema.todos).values({ ...parsed.data, userId: user.id }).returning();
   return NextResponse.json(serializeTodo(row), { status: 201 });
 }

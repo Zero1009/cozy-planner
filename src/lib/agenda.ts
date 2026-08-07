@@ -1,7 +1,14 @@
 import { CATEGORY_COLORS, PRIORITY_COLORS } from "@/lib/theme";
 import { fromISO, shortDateLabel } from "@/lib/dates";
 import { labelFor } from "@/lib/i18n";
+import type { Holiday } from "@/lib/holidays";
 import type { CalEvent, Lang, Todo } from "@/lib/types";
+
+const HOLIDAY_COLORS = {
+  bg: "oklch(94% 0.04 28)",
+  color: "oklch(44% 0.1 28)",
+  dot: "oklch(62% 0.16 28)",
+};
 
 const PRIORITY_ORDER: Record<Todo["priority"], number> = {
   high: 0,
@@ -11,7 +18,7 @@ const PRIORITY_ORDER: Record<Todo["priority"], number> = {
 
 export interface AgendaItem {
   key: string;
-  type: "event" | "todo";
+  type: "event" | "todo" | "holiday";
   id: number;
   time: string;
   title: string;
@@ -34,8 +41,24 @@ export function agendaForDate(
   dateISO: string,
   lang: Lang,
   events: CalEvent[],
-  todos: Todo[]
+  todos: Todo[],
+  holidays: Holiday[] = []
 ): AgendaItem[] {
+  const dayHolidays = holidays
+    .filter((holiday) => holiday.date === dateISO)
+    .map((holiday, index) => ({
+      key: `h-${holiday.date}-${index}`,
+      type: "holiday" as const,
+      id: 0,
+      time: lang === "th" ? "วันหยุด" : "Holiday",
+      title: holiday.localName,
+      categoryLabel: lang === "th" ? "วันหยุด" : "Holiday",
+      tagBg: HOLIDAY_COLORS.bg,
+      tagColor: HOLIDAY_COLORS.color,
+      dotColor: HOLIDAY_COLORS.dot,
+      done: false,
+    }));
+
   const dayEvents = events
     .filter((e) => e.date === dateISO)
     .slice()
@@ -76,22 +99,26 @@ export function agendaForDate(
       };
     });
 
-  return [...dayEvents, ...dayTodos];
+  return [...dayHolidays, ...dayEvents, ...dayTodos];
 }
 
 /** Up to 3 dot colors for a day cell: event dots first, then todo priority dots. */
 export function dotsForDate(
   dateISO: string,
   events: CalEvent[],
-  todos: Todo[]
+  todos: Todo[],
+  holidays: Holiday[] = []
 ): string[] {
+  const holidayDots = holidays
+    .filter((holiday) => holiday.date === dateISO)
+    .map(() => HOLIDAY_COLORS.dot);
   const eventDots = events
     .filter((e) => e.date === dateISO)
     .map((e) => catColors(e.category).dot);
   const todoDots = todos
     .filter((t) => t.due === dateISO)
     .map((t) => PRIORITY_COLORS[t.priority]);
-  return [...eventDots, ...todoDots].slice(0, 3);
+  return [...holidayDots, ...eventDots, ...todoDots].slice(0, 3);
 }
 
 export interface DashboardStats {

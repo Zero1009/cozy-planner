@@ -15,6 +15,19 @@ export async function purgePwaCaches() {
   ]);
 }
 
+export async function unsubscribePushNotifications() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  const registration = await navigator.serviceWorker.getRegistration("/");
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) return;
+  await fetch("/api/push/subscribe", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ endpoint: subscription.endpoint }),
+  }).catch(() => undefined);
+  await subscription.unsubscribe().catch(() => undefined);
+}
+
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;

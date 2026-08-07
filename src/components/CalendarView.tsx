@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
@@ -19,6 +20,7 @@ import {
   toISO,
 } from "@/lib/dates";
 import { t } from "@/lib/i18n";
+import type { Holiday } from "@/lib/holidays";
 import type { Theme } from "@/lib/theme";
 import type { CalEvent, CalView, Category, Lang, Todo } from "@/lib/types";
 
@@ -28,6 +30,7 @@ interface CalendarViewProps {
   isDesktop: boolean;
   todos: Todo[];
   events: CalEvent[];
+  holidays: Holiday[];
   todayISO: string;
   calView: CalView;
   setCalView: (v: CalView) => void;
@@ -63,12 +66,18 @@ function buildWeekDates(selectedDate: string): string[] {
   return Array.from({ length: 7 }, (_, i) => toISO(addDays(start, i)));
 }
 
+function deleteAgendaItemLabel(lang: Lang, item: AgendaItem): string {
+  if (lang === "th") return `${item.type === "event" ? "ลบนัดหมาย" : "ลบงาน"}: ${item.title}`;
+  return `${item.type === "event" ? "Delete event" : "Delete task"}: ${item.title}`;
+}
+
 export function CalendarView({
   theme,
   lang,
   isDesktop,
   todos,
   events,
+  holidays,
   todayISO,
   calView,
   setCalView,
@@ -81,10 +90,18 @@ export function CalendarView({
   const deleteEvent = useDeleteEvent();
   const deleteTodo = useDeleteTodo();
   const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<AgendaItem | null>(null);
 
-  function deleteItem(item: AgendaItem) {
-    if (item.type === "event") deleteEvent.mutate(item.id);
-    else deleteTodo.mutate(item.id);
+  function requestDeleteItem(item: AgendaItem) {
+    if (item.type === "holiday") return;
+    setItemToDelete(item);
+  }
+
+  function confirmDeleteItem() {
+    if (!itemToDelete || itemToDelete.type === "holiday") return;
+    const options = { onSuccess: () => setItemToDelete(null) };
+    if (itemToDelete.type === "event") deleteEvent.mutate(itemToDelete.id, options);
+    else deleteTodo.mutate(itemToDelete.id, options);
   }
 
   function goPrev() {
@@ -230,6 +247,7 @@ export function CalendarView({
               todayISO={todayISO}
               events={events}
               todos={todos}
+              holidays={holidays}
               onSelect={selectCell}
               cardStyle={cardStyle}
               isDesktop={isDesktop}
@@ -243,6 +261,7 @@ export function CalendarView({
               todayISO={todayISO}
               events={events}
               todos={todos}
+              holidays={holidays}
               onSelect={(iso) => setSelectedDate(iso)}
               cardStyle={cardStyle}
             />
@@ -255,8 +274,9 @@ export function CalendarView({
                 selectedDate={selectedDate}
                 events={events}
                 todos={todos}
+                holidays={holidays}
                 cardStyle={cardStyle}
-                onDelete={deleteItem}
+                onDelete={requestDeleteItem}
               />
               {isDesktop && (
                 <AddEventForm
@@ -279,8 +299,9 @@ export function CalendarView({
               selectedDate={selectedDate}
               events={events}
               todos={todos}
+              holidays={holidays}
               cardStyle={cardStyle}
-              onDelete={deleteItem}
+              onDelete={requestDeleteItem}
             />
             {isDesktop && (
               <AddEventForm
@@ -330,6 +351,19 @@ export function CalendarView({
           onDone={() => setAddSheetOpen(false)}
         />
       )}
+      {itemToDelete && itemToDelete.type !== "holiday" && (
+        <ConfirmDeleteDialog
+          theme={theme}
+          title={itemToDelete.type === "event" ? "ลบนัดหมายนี้ไหม?" : "ลบงานนี้ไหม?"}
+          description={`${itemToDelete.type === "event" ? "นัดหมาย" : "งาน"} “${itemToDelete.title}” จะถูกลบออกจากปฏิทินของคุณ`}
+          confirmLabel={itemToDelete.type === "event" ? "ลบนัดหมาย" : "ลบงาน"}
+          pending={itemToDelete.type === "event" ? deleteEvent.isPending : deleteTodo.isPending}
+          onCancel={() => {
+            if (!deleteEvent.isPending && !deleteTodo.isPending) setItemToDelete(null);
+          }}
+          onConfirm={confirmDeleteItem}
+        />
+      )}
     </div>
   );
 }
@@ -370,6 +404,42 @@ function IconButton({
   );
 }
 
+function CatPawHighlight({ theme, isDesktop }: { theme: Theme; isDesktop: boolean }) {
+  const color = theme.accentBg;
+  const shadow = "oklch(24% 0.03 55 / 0.18)";
+  return (
+    <svg
+      aria-label="selected day cat paw"
+      viewBox="0 0 100 94"
+      role="img"
+      focusable="false"
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        width: isDesktop ? 92 : 72,
+        height: isDesktop ? 86 : 68,
+        pointerEvents: "none",
+        transform: "translate(-50%, -60%) rotate(-3deg)",
+        filter: `drop-shadow(0 8px 14px ${shadow})`,
+      }}
+    >
+      <g fill={color}>
+        <ellipse cx="18" cy="29" rx="10.5" ry="14" transform="rotate(-23 18 29)" />
+        <ellipse cx="39" cy="18" rx="11" ry="15" transform="rotate(-9 39 18)" />
+        <ellipse cx="61" cy="18" rx="11" ry="15" transform="rotate(9 61 18)" />
+        <ellipse cx="82" cy="29" rx="10.5" ry="14" transform="rotate(23 82 29)" />
+        <path d="M50 42c18.5 0 34 12.6 34 29.3 0 12.6-8.4 18.8-19.8 18.8-5.3 0-9.1-2.1-14.2-2.1s-8.9 2.1-14.2 2.1C24.4 90.1 16 83.9 16 71.3 16 54.6 31.5 42 50 42Z" />
+      </g>
+      <g fill="white" opacity="0.16">
+        <ellipse cx="35" cy="15" rx="3.5" ry="5.2" transform="rotate(-15 35 15)" />
+        <ellipse cx="58" cy="15" rx="3.2" ry="4.8" transform="rotate(12 58 15)" />
+        <path d="M35 52c6-4.4 20.2-6 31 1" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.25" />
+      </g>
+    </svg>
+  );
+}
+
 interface CardStyleProp {
   cardStyle: CSSProperties;
 }
@@ -382,6 +452,7 @@ function MonthGrid({
   todayISO,
   events,
   todos,
+  holidays,
   onSelect,
   cardStyle,
   isDesktop,
@@ -393,6 +464,7 @@ function MonthGrid({
   todayISO: string;
   events: CalEvent[];
   todos: Todo[];
+  holidays: Holiday[];
   onSelect: (iso: string, inMonth: boolean) => void;
   isDesktop: boolean;
 } & CardStyleProp) {
@@ -429,7 +501,7 @@ function MonthGrid({
         {cells.map((cell) => {
           const isToday = cell.iso === todayISO;
           const isSelected = cell.iso === selectedDate;
-          const dots = dotsForDate(cell.iso, events, todos);
+          const dots = dotsForDate(cell.iso, events, todos, holidays);
           return (
             <button
               key={cell.iso}
@@ -445,12 +517,13 @@ function MonthGrid({
                   : isToday
                   ? `1.5px solid ${theme.accentBg}`
                   : "1px solid transparent",
-                background: isSelected ? theme.accentBg : "transparent",
+                background: "transparent",
                 color: isSelected ? "white" : cell.inMonth ? theme.textPrimary : theme.textMuted,
                 opacity: cell.inMonth ? 1 : 0.45,
                 fontSize: isDesktop ? 13 : 12,
                 fontWeight: isToday || isSelected ? 700 : 500,
                 cursor: "pointer",
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -459,8 +532,27 @@ function MonthGrid({
                 padding: 0,
               }}
             >
-              <span>{cell.dayNum}</span>
-              <span style={{ display: "flex", gap: 2 }}>
+              {isSelected && <CatPawHighlight theme={theme} isDesktop={isDesktop} />}
+              <span
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  minWidth: isSelected ? (isDesktop ? 28 : 23) : undefined,
+                  height: isSelected ? (isDesktop ? 28 : 23) : undefined,
+                  padding: isSelected ? "0 7px" : undefined,
+                  borderRadius: isSelected ? 999 : undefined,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: isSelected ? theme.surface : undefined,
+                  color: isSelected ? theme.accentDark : undefined,
+                  boxShadow: isSelected ? "0 2px 8px oklch(24% 0.03 55 / 0.18)" : undefined,
+                  lineHeight: 1,
+                }}
+              >
+                {cell.dayNum}
+              </span>
+              <span style={{ display: "flex", gap: 2, position: "relative", zIndex: 1 }}>
                 {dots.map((c, i) => (
                   <span
                     key={i}
@@ -489,6 +581,7 @@ function WeekGrid({
   todayISO,
   events,
   todos,
+  holidays,
   onSelect,
   cardStyle,
 }: {
@@ -498,6 +591,7 @@ function WeekGrid({
   todayISO: string;
   events: CalEvent[];
   todos: Todo[];
+  holidays: Holiday[];
   onSelect: (iso: string) => void;
 } & CardStyleProp) {
   const weekDates = buildWeekDates(selectedDate);
@@ -514,7 +608,7 @@ function WeekGrid({
       {weekDates.map((iso, i) => {
         const isToday = iso === todayISO;
         const isSelected = iso === selectedDate;
-        const items = agendaForDate(iso, lang, events, todos).slice(0, 3);
+        const items = agendaForDate(iso, lang, events, todos, holidays).slice(0, 3);
         const d = fromISO(iso);
         return (
           <button
@@ -574,6 +668,7 @@ function DayAgenda({
   selectedDate,
   events,
   todos,
+  holidays,
   cardStyle,
   onDelete,
 }: {
@@ -582,9 +677,10 @@ function DayAgenda({
   selectedDate: string;
   events: CalEvent[];
   todos: Todo[];
+  holidays: Holiday[];
   onDelete: (item: AgendaItem) => void;
 } & CardStyleProp) {
-  const items = agendaForDate(selectedDate, lang, events, todos);
+  const items = agendaForDate(selectedDate, lang, events, todos, holidays);
   return (
     <div style={cardStyle}>
       <h2 className="font-display" style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600 }}>
@@ -638,7 +734,9 @@ function DayAgenda({
               >
                 {item.categoryLabel}
               </span>
-              <DeleteButton theme={theme} ariaLabel="delete item" onClick={() => onDelete(item)} />
+              {item.type !== "holiday" && (
+                <DeleteButton theme={theme} ariaLabel={deleteAgendaItemLabel(lang, item)} onClick={() => onDelete(item)} />
+              )}
             </div>
           ))}
         </div>
@@ -653,6 +751,7 @@ function SidePanelAgenda({
   selectedDate,
   events,
   todos,
+  holidays,
   cardStyle,
   onDelete,
 }: {
@@ -661,9 +760,10 @@ function SidePanelAgenda({
   selectedDate: string;
   events: CalEvent[];
   todos: Todo[];
+  holidays: Holiday[];
   onDelete: (item: AgendaItem) => void;
 } & CardStyleProp) {
-  const items = agendaForDate(selectedDate, lang, events, todos);
+  const items = agendaForDate(selectedDate, lang, events, todos, holidays);
   return (
     <div style={cardStyle}>
       <h2 className="font-display" style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 600 }}>
@@ -707,7 +807,9 @@ function SidePanelAgenda({
               >
                 {item.title}
               </span>
-              <DeleteButton theme={theme} ariaLabel="delete item" size={13} onClick={() => onDelete(item)} />
+              {item.type !== "holiday" && (
+                <DeleteButton theme={theme} ariaLabel={deleteAgendaItemLabel(lang, item)} size={13} onClick={() => onDelete(item)} />
+              )}
             </div>
           ))}
         </div>

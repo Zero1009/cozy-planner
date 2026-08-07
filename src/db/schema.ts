@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 /**
  * Categories and priorities are stored as plain text (not FK/enum tables) on
@@ -33,6 +33,7 @@ export const users = sqliteTable("users", {
 
 export const todos = sqliteTable("todos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   category: text("category").notNull().default("other"),
   customCategoryLabel: text("custom_category_label"),
@@ -47,6 +48,7 @@ export const todos = sqliteTable("todos", {
 
 export const events = sqliteTable("events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   category: text("category").notNull().default("personal"),
   customCategoryLabel: text("custom_category_label"),
@@ -61,9 +63,45 @@ export const events = sqliteTable("events", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    lastSeenAt: integer("last_seen_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    failedAt: integer("failed_at", { mode: "timestamp_ms" }),
+  }
+);
+
+export const notificationDeliveries = sqliteTable(
+  "notification_deliveries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    kind: text("kind").notNull(),
+    sourceId: integer("source_id").notNull(),
+    fireAtMs: integer("fire_at_ms").notNull(),
+    sentAt: integer("sent_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (table) => ({ deliveryIdx: uniqueIndex("notification_deliveries_unique_idx").on(table.kind, table.sourceId, table.fireAtMs) })
+);
+
 export type Todo = typeof todos.$inferSelect;
 export type NewTodo = typeof todos.$inferInsert;
 export type EventRow = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;

@@ -1,4 +1,4 @@
-const CACHE_NAME = "cozy-planner-static-v1";
+const CACHE_NAME = "cozy-planner-static-v2";
 const STATIC_ASSETS = [
   "/offline",
   "/favicon.png",
@@ -70,3 +70,60 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+self.addEventListener("push", (event) => {
+  event.waitUntil(
+    (async () => {
+      let payload = {};
+      try {
+        payload = event.data ? event.data.json() : {};
+      } catch {
+        payload = {};
+      }
+
+      const title = cleanNotificationText(payload.title, "Cozy Planner", 80);
+      const body = cleanNotificationText(payload.body, "มีการแจ้งเตือนใหม่ครับ", 160);
+      const url = safeNotificationUrl(payload.url);
+
+      await self.registration.showNotification(title, {
+        body,
+        icon: "/icon-192.png",
+        badge: "/favicon.png",
+        tag: url,
+        data: { url },
+      });
+    })()
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = safeNotificationUrl(event.notification.data?.url);
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      if (existing) {
+        existing.navigate(url);
+        return existing.focus();
+      }
+      return clients.openWindow(url);
+    })
+  );
+});
+
+function cleanNotificationText(value, fallback, maxLength) {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.replace(/\s+/g, " ").trim();
+  if (!trimmed) return fallback;
+  return trimmed.length > maxLength ? `${trimmed.slice(0, maxLength - 1)}…` : trimmed;
+}
+
+function safeNotificationUrl(value) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/dashboard";
+  try {
+    const parsed = new URL(value, self.location.origin);
+    return parsed.origin === self.location.origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : "/dashboard";
+  } catch {
+    return "/dashboard";
+  }
+}

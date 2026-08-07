@@ -9,11 +9,13 @@ import { AiPanel } from "@/components/AiPanel";
 import { AdminUsersDialog, ProfileDialog } from "@/components/AccountDialogs";
 import { CozyLoading } from "@/components/CozyLoading";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
-import { purgePwaCaches } from "@/components/ServiceWorkerRegistrar";
+import { purgePwaCaches, unsubscribePushNotifications } from "@/components/ServiceWorkerRegistrar";
+import { PushNotificationSettings } from "@/components/PushNotificationSettings";
 import { Dashboard } from "@/components/Dashboard";
 import { CalendarView } from "@/components/CalendarView";
 import { TodoView } from "@/components/TodoView";
 import { useEvents } from "@/hooks/useEvents";
+import { useHolidays } from "@/hooks/useHolidays";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useTodos } from "@/hooks/useTodos";
 import {
@@ -55,6 +57,18 @@ const THEME_SWATCHES: { key: ThemeColor; color: string }[] = [
   { key: "berry", color: "oklch(68% 0.15 28)" },
 ];
 
+function yearFromISO(iso: string): number {
+  return Number(iso.slice(0, 4));
+}
+
+function holidayYearsForCalendar(calRefDate: string, selectedDate: string, todayISO: string): number[] {
+  const ref = new Date(`${calRefDate}T00:00:00`);
+  const years = new Set([yearFromISO(calRefDate), yearFromISO(selectedDate), yearFromISO(todayISO)]);
+  years.add(new Date(ref.getFullYear(), ref.getMonth() - 1, 1).getFullYear());
+  years.add(new Date(ref.getFullYear(), ref.getMonth() + 1, 1).getFullYear());
+  return [...years].sort((a, b) => a - b);
+}
+
 interface AppShellProps {
   currentUser: CurrentUser;
 }
@@ -89,8 +103,10 @@ export function AppShell({ currentUser }: AppShellProps) {
 
   const todosQuery = useTodos();
   const eventsQuery = useEvents();
+  const holidaysQuery = useHolidays(holidayYearsForCalendar(calRefDate, selectedDate, todayISO));
   const todos = todosQuery.data ?? [];
   const events = eventsQuery.data ?? [];
+  const holidays = holidaysQuery.data ?? [];
   const loadingPlannerData = todosQuery.isLoading || eventsQuery.isLoading;
 
   useEffect(() => {
@@ -247,6 +263,7 @@ export function AppShell({ currentUser }: AppShellProps) {
               isDesktop={isDesktop}
               todos={todos}
               events={events}
+              holidays={holidays}
               todayISO={todayISO}
               calView={calView}
               setCalView={setCalView}
@@ -391,6 +408,7 @@ function TopBar({
   onOpenAdmin,
 }: TopBarProps) {
   async function logout() {
+    await unsubscribePushNotifications();
     await postJSON("/api/auth/logout", {});
     await purgePwaCaches();
     window.location.href = "/login";
@@ -399,12 +417,18 @@ function TopBar({
   return (
     <header
       style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 35,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         gap: 10,
         padding: isDesktop ? "14px 20px" : "10px 12px",
+        background: theme.surface,
         borderBottom: `1px solid ${theme.divider}`,
+        boxShadow: "0 8px 22px oklch(20% 0.02 90 / 0.06)",
+        backdropFilter: "blur(14px)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -641,6 +665,20 @@ function TopBar({
                     fontWeight: 700,
                     cursor: "pointer",
                   }}
+                />
+                <PushNotificationSettings
+                  buttonStyle={{
+                    padding: "8px 10px",
+                    borderRadius: 10,
+                    border: `1px solid ${theme.borderColor}`,
+                    background: theme.inputBg,
+                    color: theme.textPrimary,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                  noteStyle={{ fontSize: 11, color: theme.textMuted, lineHeight: 1.45 }}
                 />
                 {currentUser.isAdmin && (
                   <button

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { CheckIcon } from "@/components/ui/icons";
 import { useCreateTodo, useDeleteTodo, useUpdateTodo } from "@/hooks/useTodos";
@@ -58,10 +59,20 @@ function sortTodos(todos: Todo[]): Todo[] {
   });
 }
 
+function todoDoneLabel(lang: Lang, todo: Todo): string {
+  if (lang === "th") return `${todo.done ? "ทำเครื่องหมายว่ายังไม่เสร็จ" : "ทำเครื่องหมายว่าเสร็จ"}: ${todo.title}`;
+  return `${todo.done ? "Mark incomplete" : "Mark complete"}: ${todo.title}`;
+}
+
+function deleteTodoLabel(lang: Lang, todo: Todo): string {
+  return lang === "th" ? `ลบงาน: ${todo.title}` : `Delete task: ${todo.title}`;
+}
+
 export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: TodoViewProps) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>("personal");
   const [customLabel, setCustomLabel] = useState("");
+  const [todoToDelete, setTodoToDelete] = useState<Todo | null>(null);
 
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
@@ -83,6 +94,13 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
 
   function toggleDone(todo: Todo) {
     updateTodo.mutate({ id: todo.id, patch: { done: !todo.done } });
+  }
+
+  function confirmDeleteTodo() {
+    if (!todoToDelete) return;
+    deleteTodo.mutate(todoToDelete.id, {
+      onSuccess: () => setTodoToDelete(null),
+    });
   }
 
   const visible = sortTodos(filterTodos(todos, filter, todayISO));
@@ -199,7 +217,7 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
                   <button
                     type="button"
                     onClick={() => toggleDone(todo)}
-                    aria-label="toggle done"
+                    aria-label={todoDoneLabel(lang, todo)}
                     style={{
                       width: 22,
                       height: 22,
@@ -259,8 +277,8 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
 
                   <DeleteButton
                     theme={theme}
-                    ariaLabel="delete task"
-                    onClick={() => deleteTodo.mutate(todo.id)}
+                    ariaLabel={deleteTodoLabel(lang, todo)}
+                    onClick={() => setTodoToDelete(todo)}
                   />
                 </div>
               );
@@ -268,6 +286,19 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
           </div>
         )}
       </div>
+      {todoToDelete && (
+        <ConfirmDeleteDialog
+          theme={theme}
+          title="ลบงานนี้ไหม?"
+          description={`งาน “${todoToDelete.title}” จะถูกลบออกจากรายการของคุณ`}
+          confirmLabel="ลบงาน"
+          pending={deleteTodo.isPending}
+          onCancel={() => {
+            if (!deleteTodo.isPending) setTodoToDelete(null);
+          }}
+          onConfirm={confirmDeleteTodo}
+        />
+      )}
     </div>
   );
 }

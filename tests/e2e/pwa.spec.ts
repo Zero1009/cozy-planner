@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { eq } from "drizzle-orm";
+import { pushSubscriptions } from "../../src/db/schema";
+
+const e2eDbUrl = "file:.e2e/cozy-e2e.db";
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/login");
@@ -56,6 +62,51 @@ test("shows the install CTA inside the authenticated settings menu", async ({ pa
   await expect(page.getByRole("button", { name: "ติดตั้งแอป" })).toBeVisible();
   await page.getByRole("button", { name: "ติดตั้งแอป" }).click();
   await expect(page.getByRole("dialog", { name: "ติดตั้ง Cozy Planner" })).toBeVisible();
+});
+
+test("shows notification settings and stores/removes this device subscription via the authenticated API", async ({ page }) => {
+  await login(page);
+
+  await page.evaluate(async () => {
+    if (!("serviceWorker" in navigator)) throw new Error("service worker is not available");
+    await navigator.serviceWorker.ready;
+  });
+
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.getByRole("button", { name: "เปิดแจ้งเตือน" })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText(/แจ้งเตือน|notification/i);
+
+  const fakeSubscription = {
+    endpoint: "https://example.push.test/send/e2e-device",
+    expirationTime: null,
+    keys: { p256dh: "e2e-public-key", auth: "e2e-auth-secret" },
+  };
+
+  const subscribe = await page.request.post("/api/push/subscribe", { data: fakeSubscription });
+  expect(subscribe.ok()).toBeTruthy();
+
+  await expect
+    .poll(async () => {
+      const client = createClient({ url: e2eDbUrl });
+      const db = drizzle(client);
+      const rows = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, 1));
+      client.close();
+      return rows.length;
+    })
+    .toBe(1);
+
+  const unsubscribe = await page.request.delete("/api/push/subscribe", { data: { endpoint: fakeSubscription.endpoint } });
+  expect(unsubscribe.ok()).toBeTruthy();
+
+  await expect
+    .poll(async () => {
+      const client = createClient({ url: e2eDbUrl });
+      const db = drizzle(client);
+      const rows = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, 1));
+      client.close();
+      return rows.length;
+    })
+    .toBe(0);
 });
 
 test("service worker registers and shows the public offline fallback without caching private pages", async ({ page, context }) => {

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db/client";
 import { serializeEvent } from "@/lib/serialize";
@@ -13,7 +13,8 @@ interface Ctx {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -35,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const [row] = await db
     .update(schema.events)
     .set(parsed.data)
-    .where(eq(schema.events.id, idNum))
+    .where(and(eq(schema.events.id, idNum), eq(schema.events.userId, user.id)))
     .returning();
 
   if (!row) {
@@ -46,7 +47,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
-  if (!(await getCurrentUser())) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -56,6 +58,12 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  await db.delete(schema.events).where(eq(schema.events.id, idNum));
+  const deleted = await db
+    .delete(schema.events)
+    .where(and(eq(schema.events.id, idNum), eq(schema.events.userId, user.id)))
+    .returning({ id: schema.events.id });
+  if (deleted.length === 0) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
+  }
   return NextResponse.json({ ok: true });
 }

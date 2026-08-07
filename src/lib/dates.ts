@@ -38,6 +38,11 @@ const MONTHS: Record<Lang, string[]> = {
   ],
 };
 
+const SHORT_MONTHS: Record<Lang, string[]> = {
+  th: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
+
 const DOW_SHORT: Record<Lang, string[]> = {
   th: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -63,5 +68,5 @@ export function longDateLabel(d: Date, lang: Lang): string {
 }
 
 export function shortDateLabel(d: Date, lang: Lang): string {
-  return `${d.getDate()} ${MONTHS[lang][d.getMonth()].slice(0, 3)}`;
+  return `${d.getDate()} ${SHORT_MONTHS[lang][d.getMonth()]}`;
 }

@@ -20,16 +20,18 @@
     "e2e": "sh -c 'playwright test \"$@\"; ec=$?; npm run e2e:cleanup; exit $ec' --"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^4.0.13",
     "@libsql/client": "^0.14.0",
     "@tanstack/react-query": "^5.62.0",
+    "ai": "^7.0.35",
     "drizzle-orm": "^0.38.0",
     "next": "^15.5.20",
-    "openai": "^4.77.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "web-push": "^3.6.7",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -38,6 +40,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/web-push": "^3.6.4",
     "drizzle-kit": "^0.30.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.11",
