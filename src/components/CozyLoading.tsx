@@ -6,7 +6,11 @@ interface CozyLoadingProps {
 }
 
 export function CozyLoading({ message = "กำลังเตรียม Cozy Planner...", compact = false }: CozyLoadingProps) {
-  const size = compact ? 54 : 128;
+  // clamp() keeps the mascot from looming over small mobile viewports (it used
+  // to render at a fixed 128px, which dwarfed content on narrow screens) while
+  // staying full-size on desktop.
+  const size = compact ? "clamp(40px, 14vw, 54px)" : "clamp(60px, 20vw, 128px)";
+  const basePx = compact ? 54 : 128;
   return (
     <div
       style={{
@@ -26,13 +30,14 @@ export function CozyLoading({ message = "กำลังเตรียม Cozy 
       <Image
         src="/cozy-loading-cat.gif"
         alt=""
-        width={size}
-        height={size}
+        width={basePx}
+        height={basePx}
         unoptimized
         priority={!compact}
         style={{
           width: size,
           height: size,
+          maxWidth: "100%",
           objectFit: "contain",
           filter: "drop-shadow(0 12px 22px rgba(93, 65, 35, 0.16))",
         }}

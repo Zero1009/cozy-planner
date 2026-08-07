@@ -7,7 +7,7 @@ import { TimePicker } from "@/components/ui/TimePicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { useCreateEvent, useDeleteEvent } from "@/hooks/useEvents";
 import { useDeleteTodo } from "@/hooks/useTodos";
-import { agendaForDate, dotsForDate, type AgendaItem } from "@/lib/agenda";
+import { agendaForDate, type AgendaItem } from "@/lib/agenda";
 import { holidayName, HOLIDAY_BORDER, HOLIDAY_COLOR, HOLIDAY_TINT } from "@/lib/holidays";
 import {
   addDays,
@@ -475,12 +475,22 @@ function MonthGrid({
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isDesktop ? 4 : 2 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: isDesktop ? 5 : 3 }}>
         {cells.map((cell) => {
           const isToday = cell.iso === todayISO;
           const isSelected = cell.iso === selectedDate;
-          const dots = dotsForDate(cell.iso, events, todos);
           const hol = holidayName(cell.iso, lang);
+          const dayItems = agendaForDate(cell.iso, lang, events, todos);
+
+          const entries: { key: string; text: string; bg: string; color: string }[] = [];
+          if (hol) entries.push({ key: "hol", text: `🎌 ${hol}`, bg: HOLIDAY_TINT, color: HOLIDAY_COLOR });
+          for (const item of dayItems) {
+            entries.push({ key: item.key, text: item.title, bg: item.tagBg, color: item.tagColor });
+          }
+          const maxSlots = isDesktop ? 3 : 2;
+          const shown = entries.slice(0, maxSlots);
+          const overflowCount = entries.length - shown.length;
+
           return (
             <button
               key={cell.iso}
@@ -488,62 +498,84 @@ function MonthGrid({
               onClick={() => onSelect(cell.iso, cell.inMonth)}
               title={hol ?? undefined}
               style={{
-                aspectRatio: "1",
                 minWidth: 0,
-                minHeight: isDesktop ? 40 : 34,
-                borderRadius: isDesktop ? 11 : 9,
+                minHeight: isDesktop ? 96 : 74,
+                borderRadius: isDesktop ? 12 : 10,
                 border: isSelected
-                  ? "none"
+                  ? `1.5px solid ${theme.accentBg}`
                   : isToday
                   ? `1.5px solid ${theme.accentBg}`
                   : "1px solid transparent",
-                background: isSelected ? theme.accentBg : "transparent",
-                color: isSelected ? "white" : cell.inMonth ? theme.textPrimary : theme.textMuted,
-                opacity: cell.inMonth ? 1 : 0.45,
-                fontSize: isDesktop ? 13 : 12,
-                fontWeight: isToday || isSelected ? 700 : 500,
+                background: isSelected ? theme.accentTint : "transparent",
+                opacity: cell.inMonth ? 1 : 0.5,
                 cursor: "pointer",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                alignItems: "stretch",
+                textAlign: "left",
                 gap: isDesktop ? 3 : 2,
-                padding: 0,
+                padding: isDesktop ? "6px 5px" : "4px 3px",
+                overflow: "hidden",
               }}
             >
               <span
                 style={{
-                  color: isSelected ? "white" : hol && cell.inMonth ? HOLIDAY_COLOR : undefined,
-                  fontWeight: hol && !isSelected ? 700 : undefined,
+                  flexShrink: 0,
+                  width: isDesktop ? 24 : 20,
+                  height: isDesktop ? 24 : 20,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: isDesktop ? 13 : 12,
+                  fontWeight: isToday || isSelected || hol ? 700 : 500,
+                  background: isSelected ? theme.accentBg : "transparent",
+                  color: isSelected
+                    ? "white"
+                    : hol && cell.inMonth
+                    ? HOLIDAY_COLOR
+                    : cell.inMonth
+                    ? theme.textPrimary
+                    : theme.textMuted,
                 }}
               >
                 {cell.dayNum}
               </span>
-              <span style={{ display: "flex", gap: 2 }}>
-                {hol && (
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 0 }}>
+                {shown.map((e) => (
                   <span
+                    key={e.key}
                     style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      background: isSelected ? "white" : HOLIDAY_COLOR,
-                      display: "inline-block",
+                      fontSize: isDesktop ? 10 : 8.5,
+                      fontWeight: 700,
+                      lineHeight: 1.3,
+                      padding: isDesktop ? "1.5px 5px" : "1px 4px",
+                      borderRadius: 5,
+                      background: e.bg,
+                      color: e.color,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
-                  />
-                )}
-                {dots.map((c, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      background: isSelected ? "white" : c,
-                      display: "inline-block",
-                    }}
-                  />
+                  >
+                    {e.text}
+                  </span>
                 ))}
-              </span>
+                {overflowCount > 0 && (
+                  <span
+                    style={{
+                      fontSize: isDesktop ? 10 : 8.5,
+                      fontWeight: 700,
+                      lineHeight: 1.3,
+                      padding: "0 2px",
+                      color: theme.textMuted,
+                    }}
+                  >
+                    +{overflowCount}
+                  </span>
+                )}
+              </div>
             </button>
           );
         })}
