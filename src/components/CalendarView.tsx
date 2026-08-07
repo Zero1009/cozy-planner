@@ -487,7 +487,9 @@ function MonthGrid({
           for (const item of dayItems) {
             entries.push({ key: item.key, text: item.title, bg: item.tagBg, color: item.tagColor });
           }
-          const maxSlots = isDesktop ? 3 : 2;
+          // Mobile cells are ~50px wide, too narrow for more than one legible
+          // chip; the side/day agenda below already carries the full list.
+          const maxSlots = isDesktop ? 3 : 1;
           const shown = entries.slice(0, maxSlots);
           const overflowCount = entries.length - shown.length;
 
@@ -498,6 +500,13 @@ function MonthGrid({
               onClick={() => onSelect(cell.iso, cell.inMonth)}
               title={hol ?? undefined}
               style={{
+                // Safari doesn't stretch <button> grid items to fill their
+                // column (unlike Chromium), so it renders as a tall, content-
+                // width capsule instead of a full-width cell. `appearance:
+                // none` strips native control sizing/inset padding too.
+                width: "100%",
+                WebkitAppearance: "none",
+                appearance: "none",
                 minWidth: 0,
                 minHeight: isDesktop ? 96 : 74,
                 borderRadius: isDesktop ? 12 : 10,
@@ -542,12 +551,12 @@ function MonthGrid({
                 {cell.dayNum}
               </span>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, overflow: "hidden" }}>
                 {shown.map((e) => (
                   <span
                     key={e.key}
                     style={{
-                      fontSize: isDesktop ? 10 : 8.5,
+                      fontSize: isDesktop ? 10 : 9,
                       fontWeight: 700,
                       lineHeight: 1.3,
                       padding: isDesktop ? "1.5px 5px" : "1px 4px",
@@ -565,7 +574,7 @@ function MonthGrid({
                 {overflowCount > 0 && (
                   <span
                     style={{
-                      fontSize: isDesktop ? 10 : 8.5,
+                      fontSize: isDesktop ? 10 : 9,
                       fontWeight: 700,
                       lineHeight: 1.3,
                       padding: "0 2px",
@@ -626,6 +635,10 @@ function WeekGrid({
             onClick={() => onSelect(iso)}
             style={{
               ...cardStyle,
+              // Same Safari grid-item-button width bug as MonthGrid below.
+              width: "100%",
+              WebkitAppearance: "none",
+              appearance: "none",
               textAlign: "left",
               cursor: "pointer",
               padding: 12,
