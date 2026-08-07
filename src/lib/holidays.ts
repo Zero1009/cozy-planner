@@ -129,3 +129,19 @@ export function upcomingHolidays(
       name: THAI_HOLIDAYS[iso][lang],
     }));
 }
+
+/** Holidays with `startISO <= date <= endISO` (inclusive), soonest first. */
+export function holidaysBetween(
+  startISO: string,
+  endISO: string,
+  lang: Lang
+): UpcomingHoliday[] {
+  return Object.keys(THAI_HOLIDAYS)
+    .filter((iso) => iso >= startISO && iso <= endISO)
+    .sort()
+    .map((iso) => ({
+      date: iso,
+      dateLabel: shortDateLabel(fromISO(iso), lang),
+      name: THAI_HOLIDAYS[iso][lang],
+    }));
+}
