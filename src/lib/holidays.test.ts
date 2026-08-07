@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   getHoliday,
   holidayName,
+  holidaysBetween,
   isHoliday,
   THAI_HOLIDAYS,
   upcomingHolidays,
@@ -38,4 +39,26 @@ test("upcomingHolidays returns soonest-first, on/after the given date", () => {
   );
   // inclusive of the same day
   assert.equal(upcomingHolidays("2026-12-31", "en", 1)[0].date, "2026-12-31");
+});
+
+test("holidaysBetween returns all holidays within an inclusive date range", () => {
+  // August 2026: only Mother's Day (12th) — this is the "this month" query
+  // the AI assistant relies on to answer "what holidays are this month?".
+  const august = holidaysBetween("2026-08-01", "2026-08-31", "th");
+  assert.deepEqual(
+    august.map((h) => h.date),
+    ["2026-08-12"]
+  );
+  assert.equal(august[0].name, "วันแม่แห่งชาติ");
+
+  // A month with no holidays returns an empty array, not undefined.
+  assert.deepEqual(holidaysBetween("2026-09-01", "2026-09-30", "en"), []);
+
+  // Range spanning a lunar cluster (July 2026: King's Birthday, Asalha Bucha,
+  // Khao Phansa fall on consecutive days).
+  const july = holidaysBetween("2026-07-01", "2026-07-31", "en");
+  assert.deepEqual(
+    july.map((h) => h.date),
+    ["2026-07-28", "2026-07-29", "2026-07-30"]
+  );
 });
