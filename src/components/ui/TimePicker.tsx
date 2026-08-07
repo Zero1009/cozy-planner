@@ -74,6 +74,11 @@ export function TimePicker({ theme, value, onChange }: TimePickerProps) {
                     setOpen(false);
                   }}
                   style={{
+                    // Safari doesn't stretch <button> grid items to fill
+                    // their column (Chromium does), leaving uneven columns.
+                    width: "100%",
+                    WebkitAppearance: "none",
+                    appearance: "none",
                     padding: "6px 4px",
                     borderRadius: 8,
                     border: "none",
