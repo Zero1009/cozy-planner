@@ -22,6 +22,20 @@ button {
   font-family: var(--font-quicksand), system-ui, sans-serif;
 }
 
+/* iOS Safari zooms the whole page when a field it focuses has a font smaller
+   than 16px. The zoom leaves the visual viewport narrower than the layout
+   viewport, which pushes right-aligned controls — notably the AI composer's
+   send button — outside the visible area. Fields are styled inline throughout
+   the app, so `!important` is what it takes to win here. Pointer devices keep
+   the designed sizes; only touch input needs the floor. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

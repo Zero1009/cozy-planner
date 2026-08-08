@@ -72,6 +72,10 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
     };
   }, [isDesktop, open]);
 
+  // Touch devices force the composer to 16px (see globals.css) to stop iOS from
+  // zooming on focus, which needs a taller row than the 14px desktop text.
+  const composerHeight = isDesktop ? 42 : 46;
+
   function resizeComposer(el = textareaRef.current) {
     if (!el) return;
     el.style.height = "auto";
@@ -80,7 +84,7 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
 
   function resetComposerHeight() {
     requestAnimationFrame(() => {
-      if (textareaRef.current) textareaRef.current.style.height = "42px";
+      if (textareaRef.current) textareaRef.current.style.height = `${composerHeight}px`;
     });
   }
 
@@ -387,8 +391,8 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
               color: theme.textPrimary,
               fontSize: 14,
               lineHeight: 1.35,
-              minHeight: 42,
-              height: 42,
+              minHeight: composerHeight,
+              height: composerHeight,
               maxHeight: 120,
               boxSizing: "border-box",
               overflowY: "auto",
@@ -402,8 +406,8 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
             disabled={pending || !input.trim()}
             aria-label={lang === "th" ? "ส่งข้อความ" : "Send message"}
             style={{
-              width: 42,
-              height: 42,
+              width: composerHeight,
+              height: composerHeight,
               flexShrink: 0,
               borderRadius: 12,
               border: "none",
