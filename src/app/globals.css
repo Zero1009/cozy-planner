@@ -156,6 +156,21 @@ button {
   vertical-align: top;
 }
 
+/* Base modal chrome. Every `.cozy-dialog-backdrop` relies on these — without a
+   base rule the mobile-only block below has nothing to override and the dialog
+   renders inline in the document flow instead of over the page. */
+.cozy-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(51, 36, 24, 0.26);
+  backdrop-filter: blur(8px);
+}
+
 @media (max-width: 640px) {
   .cozy-dialog-backdrop {
     align-items: flex-end !important;
@@ -166,6 +181,7 @@ button {
     max-width: none !important;
     width: 100% !important;
     max-height: 88vh !important;
+    overflow-y: auto !important;
     border-radius: 22px 22px 18px 18px !important;
     padding: 18px !important;
   }

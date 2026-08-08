@@ -17,13 +17,22 @@ import type { CalEvent, Lang, Todo } from "@/lib/types";
 interface DashboardProps {
   theme: Theme;
   lang: Lang;
+  isDesktop: boolean;
   todos: Todo[];
   events: CalEvent[];
   todayISO: string;
   onViewAll: () => void;
 }
 
-export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: DashboardProps) {
+export function Dashboard({
+  theme,
+  lang,
+  isDesktop,
+  todos,
+  events,
+  todayISO,
+  onViewAll,
+}: DashboardProps) {
   const stats = dashboardStats(todayISO, todos, events);
   const todayAgenda = agendaForDate(todayISO, lang, events, todos);
   const upcoming = upcomingItems(todayISO, lang, events, todos, 6);
@@ -35,6 +44,22 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
     border: `1px solid ${theme.borderColor}`,
     borderRadius: 18,
     padding: 18,
+  };
+
+  // The three stat tiles sit side by side on every width; on mobile they shrink
+  // instead of stacking, which otherwise cost a full screen before any content.
+  const statCardStyle: CSSProperties = { ...cardStyle, padding: isDesktop ? 18 : 12 };
+  const statLabelStyle: CSSProperties = {
+    margin: 0,
+    fontSize: isDesktop ? 13 : 11.5,
+    color: theme.textMuted,
+    fontWeight: 600,
+  };
+  const statValueStyle: CSSProperties = {
+    margin: isDesktop ? "8px 0 0" : "4px 0 0",
+    fontSize: isDesktop ? 32 : 24,
+    fontWeight: 600,
+    color: theme.textPrimary,
   };
 
   return (
@@ -78,29 +103,22 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 14,
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: isDesktop ? 14 : 8,
         }}
       >
-        <div style={cardStyle}>
-          <p style={{ margin: 0, fontSize: 13, color: theme.textMuted, fontWeight: 600 }}>
-            {t(lang, "tasksToday")}
-          </p>
-          <p
-            className="font-display"
-            style={{ margin: "8px 0 0", fontSize: 32, fontWeight: 600, color: theme.textPrimary }}
-          >
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>{t(lang, "tasksToday")}</p>
+          <p className="font-display" style={statValueStyle}>
             {stats.tasksToday}
           </p>
         </div>
 
-        <div style={cardStyle}>
-          <p style={{ margin: 0, fontSize: 13, color: theme.textMuted, fontWeight: 600 }}>
-            {t(lang, "completion")}
-          </p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>{t(lang, "completion")}</p>
           <p
             className="font-display"
-            style={{ margin: "8px 0 8px", fontSize: 32, fontWeight: 600, color: theme.textPrimary }}
+            style={{ ...statValueStyle, marginBottom: isDesktop ? 8 : 6 }}
           >
             {stats.completionPct}%
           </p>
@@ -124,14 +142,9 @@ export function Dashboard({ theme, lang, todos, events, todayISO, onViewAll }: D
           </div>
         </div>
 
-        <div style={cardStyle}>
-          <p style={{ margin: 0, fontSize: 13, color: theme.textMuted, fontWeight: 600 }}>
-            {t(lang, "upcomingEvents")}
-          </p>
-          <p
-            className="font-display"
-            style={{ margin: "8px 0 0", fontSize: 32, fontWeight: 600, color: theme.textPrimary }}
-          >
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>{t(lang, "upcomingEvents")}</p>
+          <p className="font-display" style={statValueStyle}>
             {stats.upcomingEventsCount}
           </p>
         </div>

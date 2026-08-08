@@ -143,8 +143,8 @@ export function CalendarView({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: isDesktop ? 10 : 6, minWidth: 0, width: isDesktop ? undefined : "100%" }}>
-          <IconButton theme={theme} onClick={goPrev} label="prev">
-            <ChevronLeftIcon size={13} />
+          <IconButton theme={theme} onClick={goPrev} label="prev" isDesktop={isDesktop}>
+            <ChevronLeftIcon size={isDesktop ? 13 : 15} />
           </IconButton>
           <h1
             className="font-display"
@@ -160,14 +160,15 @@ export function CalendarView({
           >
             {periodLabel}
           </h1>
-          <IconButton theme={theme} onClick={goNext} label="next">
-            <ChevronRightIcon size={13} />
+          <IconButton theme={theme} onClick={goNext} label="next" isDesktop={isDesktop}>
+            <ChevronRightIcon size={isDesktop ? 13 : 15} />
           </IconButton>
           <button
             type="button"
             onClick={onToday}
             style={{
-              padding: isDesktop ? "7px 14px" : "7px 10px",
+              flexShrink: 0,
+              padding: isDesktop ? "7px 14px" : "12px 12px",
               borderRadius: 11,
               border: `1px solid ${theme.borderColor}`,
               background: theme.chipBg,
@@ -197,7 +198,7 @@ export function CalendarView({
                 type="button"
                 onClick={() => setCalView(v)}
                 style={{
-                  padding: "8px 14px",
+                  padding: isDesktop ? "8px 14px" : "12px 16px",
                   border: "none",
                   background: active ? theme.accentBg : "transparent",
                   color: active ? "white" : theme.textSecondary,
@@ -304,7 +305,10 @@ export function CalendarView({
             position: "sticky",
             bottom: "calc(78px + env(safe-area-inset-bottom))",
             zIndex: 11,
-            width: "100%",
+            // Leave the floating AI button its default corner instead of
+            // sitting underneath it.
+            width: "auto",
+            marginRight: 66,
             padding: "13px 16px",
             borderRadius: 16,
             border: "none",
@@ -339,11 +343,13 @@ function IconButton({
   theme,
   onClick,
   label,
+  isDesktop,
   children,
 }: {
   theme: Theme;
   onClick: () => void;
   label: string;
+  isDesktop: boolean;
   children: ReactNode;
 }) {
   return (
@@ -352,8 +358,10 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       style={{
-        width: 32,
-        height: 32,
+        // Pointer-sized on desktop, thumb-sized on touch.
+        width: isDesktop ? 32 : 44,
+        height: isDesktop ? 32 : 44,
+        flexShrink: 0,
         borderRadius: 10,
         border: `1px solid ${theme.borderColor}`,
         background: theme.chipBg,
@@ -483,13 +491,20 @@ function MonthGrid({
           const dayItems = agendaForDate(cell.iso, lang, events, todos);
 
           const entries: { key: string; text: string; bg: string; color: string }[] = [];
-          if (hol) entries.push({ key: "hol", text: `🎌 ${hol}`, bg: HOLIDAY_TINT, color: HOLIDAY_COLOR });
+          // The emoji eats scarce width on mobile, where the holiday chip is
+          // already tinted and the day number recoloured.
+          if (hol) {
+            entries.push({
+              key: "hol",
+              text: isDesktop ? `🎌 ${hol}` : hol,
+              bg: HOLIDAY_TINT,
+              color: HOLIDAY_COLOR,
+            });
+          }
           for (const item of dayItems) {
             entries.push({ key: item.key, text: item.title, bg: item.tagBg, color: item.tagColor });
           }
-          // Mobile cells are ~50px wide, too narrow for more than one legible
-          // chip; the side/day agenda below already carries the full list.
-          const maxSlots = isDesktop ? 3 : 1;
+          const maxSlots = isDesktop ? 3 : 2;
           const shown = entries.slice(0, maxSlots);
           const overflowCount = entries.length - shown.length;
 
@@ -508,7 +523,7 @@ function MonthGrid({
                 WebkitAppearance: "none",
                 appearance: "none",
                 minWidth: 0,
-                minHeight: isDesktop ? 96 : 74,
+                minHeight: isDesktop ? 96 : 88,
                 borderRadius: isDesktop ? 12 : 10,
                 border: isSelected
                   ? `1.5px solid ${theme.accentBg}`
@@ -555,20 +570,44 @@ function MonthGrid({
                 {shown.map((e) => (
                   <span
                     key={e.key}
+                    title={e.text}
                     style={{
-                      fontSize: isDesktop ? 10 : 9,
+                      fontSize: isDesktop ? 10 : 9.5,
                       fontWeight: 700,
-                      lineHeight: 1.3,
-                      padding: isDesktop ? "1.5px 5px" : "1px 4px",
+                      lineHeight: 1.25,
+                      padding: isDesktop ? "1.5px 5px" : "2px 4px",
                       borderRadius: 5,
                       background: e.bg,
                       color: e.color,
-                      whiteSpace: "nowrap",
                       overflow: "hidden",
-                      textOverflow: "ellipsis",
                     }}
                   >
-                    {e.text}
+                    {/* The clamp lives on a padding-free inner span: `overflow`
+                        clips at the padding box, so a clamped line that starts
+                        exactly at the content edge would otherwise bleed into
+                        the chip's own padding as a sliver of a third line. */}
+                    <span
+                      style={
+                        isDesktop
+                          ? {
+                              display: "block",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }
+                          : {
+                              display: "-webkit-box",
+                              WebkitBoxOrient: "vertical",
+                              WebkitLineClamp: 2,
+                              overflow: "hidden",
+                              // Thai has no inter-word spaces, so nothing wraps
+                              // without an explicit anywhere-break.
+                              overflowWrap: "anywhere",
+                            }
+                      }
+                    >
+                      {e.text}
+                    </span>
                   </span>
                 ))}
                 {overflowCount > 0 && (

@@ -23,18 +23,6 @@ interface UserRow extends CurrentUser {
   createdAt: number | Date;
 }
 
-const backdropStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  zIndex: 80,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 18,
-  background: "rgba(51, 36, 24, 0.26)",
-  backdropFilter: "blur(8px)",
-};
-
 export function ProfileDialog({ theme, user, forced, onClose, onSaved }: ProfileDialogProps) {
   const [displayName, setDisplayName] = useState(user.displayName);
   const [password, setPassword] = useState("");
@@ -61,7 +49,7 @@ export function ProfileDialog({ theme, user, forced, onClose, onSaved }: Profile
   }
 
   return (
-    <div className="cozy-dialog-backdrop" style={backdropStyle} role="dialog" aria-modal="true">
+    <div className="cozy-dialog-backdrop" role="dialog" aria-modal="true">
       <div className="cozy-dialog-card" style={cardStyle(theme)}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
           <div>
@@ -145,7 +133,7 @@ export function AdminUsersDialog({ theme, onClose }: AdminUsersDialogProps) {
   }
 
   return (
-    <div className="cozy-dialog-backdrop" style={backdropStyle} role="dialog" aria-modal="true">
+    <div className="cozy-dialog-backdrop" role="dialog" aria-modal="true">
       <div className="cozy-dialog-card" style={{ ...cardStyle(theme), maxWidth: 720 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
           <div>

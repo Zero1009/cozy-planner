@@ -27,8 +27,11 @@ export function DeleteButton({ theme, onClick, ariaLabel = "delete", size = 15 }
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        width: 26,
-        height: 26,
+        // 38px touch box pulled back to a 26px layout footprint, so the target
+        // clears the 44px-ish minimum without loosening the row rhythm.
+        width: 38,
+        height: 38,
+        margin: -6,
         flexShrink: 0,
         borderRadius: 8,
         border: "none",
