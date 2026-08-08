@@ -130,8 +130,10 @@ export function AppShell({ currentUser }: AppShellProps) {
   }
 
   function handleAiPointerDown(event: React.PointerEvent<HTMLButtonElement>) {
-    const fallback = defaultAiButtonPoint(isDesktop);
-    const point = aiButtonPoint ?? fallback;
+    // Read the live rect rather than recomputing the default offsets: those are
+    // safe-area-aware CSS calc() values that JS can't reproduce reliably.
+    const rect = event.currentTarget.getBoundingClientRect();
+    const point = aiButtonPoint ?? clampAiButtonPoint({ x: rect.left, y: rect.top });
     aiDragRef.current = {
       startX: event.clientX,
       startY: event.clientY,
@@ -211,7 +213,9 @@ export function AppShell({ currentUser }: AppShellProps) {
           style={{
             flex: 1,
             minWidth: 0,
-            padding: isDesktop ? "24px 28px 40px" : "16px 14px 96px",
+            padding: isDesktop
+              ? "24px 28px 40px"
+              : "16px calc(14px + env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))",
             maxWidth: 1180,
             width: "100%",
             marginLeft: isDesktop ? undefined : undefined,
@@ -235,6 +239,7 @@ export function AppShell({ currentUser }: AppShellProps) {
             <Dashboard
               theme={theme}
               lang={lang}
+              isDesktop={isDesktop}
               todos={todos}
               events={events}
               todayISO={todayISO}
@@ -262,6 +267,7 @@ export function AppShell({ currentUser }: AppShellProps) {
             <TodoView
               theme={theme}
               lang={lang}
+              isDesktop={isDesktop}
               todos={todos}
               todayISO={todayISO}
               filter={todoFilter}
@@ -284,8 +290,16 @@ export function AppShell({ currentUser }: AppShellProps) {
           position: "fixed",
           left: aiButtonPoint ? aiButtonPoint.x : undefined,
           top: aiButtonPoint ? aiButtonPoint.y : undefined,
-          right: aiButtonPoint ? undefined : isDesktop ? 28 : 16,
-          bottom: aiButtonPoint ? undefined : isDesktop ? 28 : 82,
+          right: aiButtonPoint
+            ? undefined
+            : isDesktop
+            ? 28
+            : "calc(16px + env(safe-area-inset-right))",
+          bottom: aiButtonPoint
+            ? undefined
+            : isDesktop
+            ? 28
+            : "calc(82px + env(safe-area-inset-bottom))",
           width: 56,
           height: 56,
           borderRadius: "50%",
@@ -332,15 +346,6 @@ export function AppShell({ currentUser }: AppShellProps) {
       )}
     </div>
   );
-}
-
-function defaultAiButtonPoint(isDesktop: boolean): FloatingPoint {
-  const marginRight = isDesktop ? 28 : 16;
-  const marginBottom = isDesktop ? 28 : 82;
-  return clampAiButtonPoint({
-    x: window.innerWidth - 56 - marginRight,
-    y: window.innerHeight - 56 - marginBottom,
-  });
 }
 
 function clampAiButtonPoint(point: FloatingPoint): FloatingPoint {
@@ -404,7 +409,11 @@ function TopBar({
         alignItems: "center",
         justifyContent: "space-between",
         gap: 10,
-        padding: isDesktop ? "14px 20px" : "10px 12px",
+        // `viewport-fit: cover` lets the header slide under the status bar in
+        // standalone PWA mode, so pad by the inset rather than a fixed value.
+        padding: isDesktop
+          ? "14px 20px"
+          : "calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 10px calc(12px + env(safe-area-inset-left))",
         borderBottom: `1px solid ${theme.divider}`,
       }}
     >
@@ -499,7 +508,7 @@ function TopBar({
           type="button"
           onClick={toggleLang}
           style={{
-            padding: isDesktop ? "8px 14px" : "8px 11px",
+            padding: isDesktop ? "8px 14px" : "12px 13px",
             borderRadius: 11,
             border: `1px solid ${theme.borderColor}`,
             background: theme.chipBg,
@@ -517,8 +526,9 @@ function TopBar({
           onClick={() => setSettingsOpen((v) => !v)}
           aria-label={isDesktop ? "Settings" : "เมนู"}
           style={{
-            width: 36,
-            height: 36,
+            width: isDesktop ? 36 : 44,
+            height: isDesktop ? 36 : 44,
+            flexShrink: 0,
             borderRadius: 11,
             border: `1px solid ${theme.borderColor}`,
             background: theme.chipBg,
@@ -746,7 +756,8 @@ function BottomNav({ theme, lang, view }: NavProps) {
         bottom: 0,
         display: "flex",
         justifyContent: "space-around",
-        padding: "8px 6px calc(8px + env(safe-area-inset-bottom))",
+        padding:
+          "8px calc(6px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left))",
         background: theme.surface,
         borderTop: `1px solid ${theme.divider}`,
         zIndex: 20,

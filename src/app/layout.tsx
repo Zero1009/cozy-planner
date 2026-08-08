@@ -36,6 +36,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Required for the `env(safe-area-inset-*)` offsets the bottom nav and the
+  // calendar action bar rely on; without it iOS reports every inset as 0.
+  viewportFit: "cover",
   themeColor: "#fff4df",
 };
 

@@ -14,6 +14,7 @@ import type { Category, Lang, Todo, TodoFilter } from "@/lib/types";
 interface TodoViewProps {
   theme: Theme;
   lang: Lang;
+  isDesktop: boolean;
   todos: Todo[];
   todayISO: string;
   filter: TodoFilter;
@@ -58,7 +59,15 @@ function sortTodos(todos: Todo[]): Todo[] {
   });
 }
 
-export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: TodoViewProps) {
+export function TodoView({
+  theme,
+  lang,
+  isDesktop,
+  todos,
+  todayISO,
+  filter,
+  setFilter,
+}: TodoViewProps) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>("personal");
   const [customLabel, setCustomLabel] = useState("");
@@ -158,7 +167,7 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
               type="button"
               onClick={() => setFilter(f.key)}
               style={{
-                padding: "7px 14px",
+                padding: isDesktop ? "7px 14px" : "11px 16px",
                 borderRadius: 999,
                 border: active ? `1.5px solid ${theme.accentBg}` : `1px solid ${theme.borderColor}`,
                 background: active ? theme.accentTint : theme.chipBg,
@@ -201,12 +210,14 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
                     onClick={() => toggleDone(todo)}
                     aria-label="toggle done"
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 7,
-                      border: `1.5px solid ${todo.done ? theme.accentBg : theme.borderColor}`,
-                      background: todo.done ? theme.accentBg : "transparent",
-                      color: "white",
+                      // Touch box is 40px; the negative margin keeps the row
+                      // laid out around the 22px tickbox drawn inside it.
+                      width: 40,
+                      height: 40,
+                      margin: -9,
+                      border: "none",
+                      background: "transparent",
+                      padding: 0,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -214,7 +225,21 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
                       flexShrink: 0,
                     }}
                   >
-                    {todo.done && <CheckIcon size={12} />}
+                    <span
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 7,
+                        border: `1.5px solid ${todo.done ? theme.accentBg : theme.borderColor}`,
+                        background: todo.done ? theme.accentBg : "transparent",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {todo.done && <CheckIcon size={12} />}
+                    </span>
                   </button>
 
                   <span
@@ -227,35 +252,53 @@ export function TodoView({ theme, lang, todos, todayISO, filter, setFilter }: To
                     }}
                   />
 
-                  <span
+                  {/* The due label and category tag never shrink, so keeping
+                      them on the title's line squeezes it to a few characters
+                      per row on a phone. Stack them underneath instead. */}
+                  <div
                     style={{
                       flex: 1,
-                      fontSize: 14.5,
-                      color: theme.textPrimary,
-                      textDecoration: todo.done ? "line-through" : "none",
-                      opacity: todo.done ? 0.5 : 1,
+                      minWidth: 0,
+                      display: "flex",
+                      flexDirection: isDesktop ? "row" : "column",
+                      alignItems: isDesktop ? "center" : "flex-start",
+                      gap: isDesktop ? 10 : 4,
                     }}
                   >
-                    {todo.title}
-                  </span>
+                    <span
+                      style={{
+                        flex: isDesktop ? 1 : undefined,
+                        minWidth: 0,
+                        fontSize: 14.5,
+                        color: theme.textPrimary,
+                        textDecoration: todo.done ? "line-through" : "none",
+                        opacity: todo.done ? 0.5 : 1,
+                      }}
+                    >
+                      {todo.title}
+                    </span>
 
-                  <span style={{ fontSize: 12, color: theme.textMuted, flexShrink: 0 }}>
-                    {dueLabel(lang, todayISO, todo.due, todo.done)}
-                  </span>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}
+                    >
+                      <span style={{ fontSize: 12, color: theme.textMuted }}>
+                        {dueLabel(lang, todayISO, todo.due, todo.done)}
+                      </span>
 
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      padding: "3px 9px",
-                      borderRadius: 999,
-                      background: colors.bg,
-                      color: colors.color,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {label}
-                  </span>
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          padding: "3px 9px",
+                          borderRadius: 999,
+                          background: colors.bg,
+                          color: colors.color,
+                        }}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  </div>
 
                   <DeleteButton
                     theme={theme}
