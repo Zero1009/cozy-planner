@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.getByLabel("ชื่อผู้ใช้").fill("trk");
-  await page.getByRole("textbox", { name: /รหัสผ่าน/ }).fill("AdminPass-2026");
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
+import { login } from "./helpers";
 
 test("PWA manifest is public and installable", async ({ request }) => {
   const response = await request.get("/manifest.webmanifest");

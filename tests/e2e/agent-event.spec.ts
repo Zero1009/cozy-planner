@@ -1,16 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { login, openAiPanel } from "./helpers";
 
-const username = "trk";
-const password = "AdminPass-2026";
 const eventTitle = "Playwright Agent Draft Event";
-
-async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.getByLabel("ชื่อผู้ใช้").fill(username);
-  await page.getByRole("textbox", { name: /รหัสผ่าน/ }).fill(password);
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
 
 test("Cozy Agent drafts an event and creates it only after user confirmation", async ({ page }) => {
   await page.route("**/api/ai", async (route) => {
@@ -36,8 +27,8 @@ test("Cozy Agent drafts an event and creates it only after user confirmation", a
   });
 
   await login(page);
-  await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
-  await page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...").fill("เพิ่มนัดทดสอบวันที่ 24 กรกฎาคม 2026 เวลา 10 ถึง 11 โมง");
+  const composer = await openAiPanel(page);
+  await composer.fill("เพิ่มนัดทดสอบวันที่ 24 กรกฎาคม 2026 เวลา 10 ถึง 11 โมง");
   await page.getByRole("button", { name: "ส่งข้อความ" }).click();
 
   await expect(page.getByText(eventTitle)).toBeVisible();
@@ -60,9 +51,7 @@ test("Cozy Agent drafts an event and creates it only after user confirmation", a
 test("mobile Cozy Agent composer keeps the send button inside the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 720 });
   await login(page);
-  await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
-
-  const composer = page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...");
+  const composer = await openAiPanel(page);
   await composer.fill("x".repeat(900));
 
   const metrics = await page.evaluate(() => {
@@ -109,10 +98,7 @@ test.describe("touch device", () => {
 
   test("form fields are at least 16px so iOS does not zoom on focus", async ({ page }) => {
     await login(page);
-    await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
-
-    const composer = page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...");
-    await expect(composer).toBeVisible();
+    await openAiPanel(page);
 
     const undersized = await page.evaluate(() =>
       [...document.querySelectorAll("input, textarea, select")]
@@ -130,9 +116,7 @@ test.describe("touch device", () => {
 
   test("composer and send button stay aligned and reachable", async ({ page }) => {
     await login(page);
-    await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
-
-    const composer = page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...");
+    const composer = await openAiPanel(page);
     await composer.fill("นัดหมอพรุ่งนี้");
 
     const metrics = await page.evaluate(() => {

@@ -1,15 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { login } from "./helpers";
 
-const username = "trk";
-const password = "AdminPass-2026";
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByLabel("ชื่อผู้ใช้").fill(username);
-  await page.getByRole("textbox", { name: /รหัสผ่าน/ }).fill(password);
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
 
 /**
  * An agenda/todo row is a `div[role="button"]`. Month-grid day cells are real
