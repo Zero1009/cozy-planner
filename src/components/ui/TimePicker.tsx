@@ -38,7 +38,7 @@ export function TimePicker({ theme, value, onChange }: TimePickerProps) {
     >
       <ClockIcon size={14} style={{ color: theme.textMuted, flexShrink: 0 }} />
       <input
-        className="cozy-time-input"
+        className="cozy-native-field"
         type="time"
         value={value}
         // A cleared field reports "", which is not a time the event form can

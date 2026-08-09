@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { EditItemSheet, type EditTarget } from "@/components/EditItemSheet";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
@@ -82,6 +83,19 @@ export function CalendarView({
   const deleteEvent = useDeleteEvent();
   const deleteTodo = useDeleteTodo();
   const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<EditTarget | null>(null);
+
+  // Agenda rows are a flattened view of two lists, so an edit has to find the
+  // record the row was built from.
+  function editItem(item: AgendaItem) {
+    if (item.type === "event") {
+      const event = events.find((e) => e.id === item.id);
+      if (event) setEditing({ type: "event", event });
+      return;
+    }
+    const todo = todos.find((td) => td.id === item.id);
+    if (todo) setEditing({ type: "todo", todo });
+  }
 
   function deleteItem(item: AgendaItem) {
     if (item.type === "event") deleteEvent.mutate(item.id);
@@ -261,6 +275,7 @@ export function CalendarView({
                 todos={todos}
                 cardStyle={cardStyle}
                 onDelete={deleteItem}
+                onEdit={editItem}
               />
               {isDesktop && (
                 <AddEventForm
@@ -286,6 +301,7 @@ export function CalendarView({
               todos={todos}
               cardStyle={cardStyle}
               onDelete={deleteItem}
+              onEdit={editItem}
             />
             {isDesktop && (
               <AddEventForm
@@ -326,6 +342,16 @@ export function CalendarView({
         >
           {t(lang, "addEventCta")}
         </button>
+      )}
+
+      {editing && (
+        <EditItemSheet
+          theme={theme}
+          lang={lang}
+          isDesktop={isDesktop}
+          target={editing}
+          onClose={() => setEditing(null)}
+        />
       )}
 
       {!isDesktop && addSheetOpen && (
@@ -754,6 +780,7 @@ function DayAgenda({
   todos,
   cardStyle,
   onDelete,
+  onEdit,
 }: {
   theme: Theme;
   lang: Lang;
@@ -761,6 +788,7 @@ function DayAgenda({
   events: CalEvent[];
   todos: Todo[];
   onDelete: (item: AgendaItem) => void;
+  onEdit: (item: AgendaItem) => void;
 } & CardStyleProp) {
   const items = agendaForDate(selectedDate, lang, events, todos);
   return (
@@ -778,6 +806,15 @@ function DayAgenda({
           {items.map((item) => (
             <div
               key={item.key}
+              role="button"
+              tabIndex={0}
+              onClick={() => onEdit(item)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onEdit(item);
+                }
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -785,6 +822,7 @@ function DayAgenda({
                 padding: "9px 12px",
                 borderRadius: 13,
                 background: theme.inputBg,
+                cursor: "pointer",
               }}
             >
               <span
@@ -834,6 +872,7 @@ function SidePanelAgenda({
   todos,
   cardStyle,
   onDelete,
+  onEdit,
 }: {
   theme: Theme;
   lang: Lang;
@@ -841,6 +880,7 @@ function SidePanelAgenda({
   events: CalEvent[];
   todos: Todo[];
   onDelete: (item: AgendaItem) => void;
+  onEdit: (item: AgendaItem) => void;
 } & CardStyleProp) {
   const items = agendaForDate(selectedDate, lang, events, todos);
   return (
@@ -858,6 +898,15 @@ function SidePanelAgenda({
           {items.map((item) => (
             <div
               key={item.key}
+              role="button"
+              tabIndex={0}
+              onClick={() => onEdit(item)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onEdit(item);
+                }
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -865,6 +914,7 @@ function SidePanelAgenda({
                 padding: "7px 10px",
                 borderRadius: 11,
                 background: theme.inputBg,
+                cursor: "pointer",
               }}
             >
               <span

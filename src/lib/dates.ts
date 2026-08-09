@@ -38,6 +38,23 @@ const MONTHS: Record<Lang, string[]> = {
   ],
 };
 
+/**
+ * Thai month abbreviations are fixed forms ending in a period ("ม.ค."), not a
+ * prefix of the full name — truncating "มกราคม" yields "มกร", which is not a
+ * word. English abbreviations happen to be prefixes, but are spelled out here
+ * so both languages read from the same table.
+ */
+const MONTHS_SHORT: Record<Lang, string[]> = {
+  th: [
+    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+  ],
+  en: [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ],
+};
+
 const DOW_SHORT: Record<Lang, string[]> = {
   th: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -62,6 +79,8 @@ export function longDateLabel(d: Date, lang: Lang): string {
     : `${dow}, ${MONTHS.en[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+export const monthNamesShort = (lang: Lang) => MONTHS_SHORT[lang];
+
 export function shortDateLabel(d: Date, lang: Lang): string {
-  return `${d.getDate()} ${MONTHS[lang][d.getMonth()].slice(0, 3)}`;
+  return `${d.getDate()} ${MONTHS_SHORT[lang][d.getMonth()]}`;
 }

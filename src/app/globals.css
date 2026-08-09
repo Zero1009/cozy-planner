@@ -36,14 +36,14 @@ button {
   }
 }
 
-.cozy-time-input {
+.cozy-native-field {
   position: relative;
 }
 
-/* The field carries its own clock icon, so hide the native glyph but stretch
-   its hit area over the whole control — that way a tap anywhere opens the
-   picker instead of only the small indicator at the edge. */
-.cozy-time-input::-webkit-calendar-picker-indicator {
+/* Date and time fields carry their own icon, so hide the native glyph but
+   stretch its hit area over the whole control — that way a tap anywhere opens
+   the picker instead of only the small indicator at the edge. */
+.cozy-native-field::-webkit-calendar-picker-indicator {
   position: absolute;
   inset: 0;
   width: 100%;
