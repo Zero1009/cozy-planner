@@ -62,3 +62,17 @@ jobs:
         # playwright.config.ts spins up its own dev server (with a throwaway
         # SQLite db + test AUTH_SECRET) via `webServer`, so no extra env here.
         run: npm run e2e
+
+      # Without these, a failure that does not reproduce locally leaves nothing
+      # to go on: the config already records a trace and screenshot, they just
+      # died with the runner.
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore

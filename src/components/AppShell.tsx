@@ -38,6 +38,13 @@ interface FloatingPoint {
   y: number;
 }
 
+/**
+ * How far the pointer may travel and still count as a tap on the floating AI
+ * button rather than the start of a drag. A finger rarely holds within 3px, so
+ * the old threshold turned ordinary taps into no-op drags.
+ */
+const TAP_SLOP = 9;
+
 const NAV_ITEMS: {
   view: View;
   href: string;
@@ -148,7 +155,7 @@ export function AppShell({ currentUser }: AppShellProps) {
     if (!drag) return;
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
+    if (Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP) drag.moved = true;
     if (!drag.moved) return;
     const next = clampAiButtonPoint({ x: drag.point.x + dx, y: drag.point.y + dy });
     setAiButtonPoint(next);
