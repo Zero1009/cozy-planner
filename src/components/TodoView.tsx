@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { EditItemSheet } from "@/components/EditItemSheet";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { CheckIcon } from "@/components/ui/icons";
 import { useCreateTodo, useDeleteTodo, useUpdateTodo } from "@/hooks/useTodos";
@@ -71,6 +72,7 @@ export function TodoView({
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>("personal");
   const [customLabel, setCustomLabel] = useState("");
+  const [editing, setEditing] = useState<Todo | null>(null);
 
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
@@ -201,6 +203,15 @@ export function TodoView({
               return (
                 <div
                   key={todo.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setEditing(todo)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setEditing(todo);
+                    }
+                  }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -208,11 +219,15 @@ export function TodoView({
                     padding: "10px 12px",
                     borderRadius: 13,
                     background: theme.inputBg,
+                    cursor: "pointer",
                   }}
                 >
                   <button
                     type="button"
-                    onClick={() => toggleDone(todo)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleDone(todo);
+                    }}
                     aria-label="toggle done"
                     style={{
                       // Touch box is 44px; the negative margin keeps the row
@@ -316,6 +331,16 @@ export function TodoView({
           </div>
         )}
       </div>
+
+      {editing && (
+        <EditItemSheet
+          theme={theme}
+          lang={lang}
+          isDesktop={isDesktop}
+          target={{ type: "todo", todo: editing }}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </div>
   );
 }
