@@ -18,6 +18,7 @@ const CATEGORY_ORDER: Category[] = [
 interface CategoryChipsProps {
   theme: Theme;
   lang: Lang;
+  isDesktop: boolean;
   value: Category;
   onChange: (c: Category) => void;
   customLabel: string;
@@ -27,6 +28,7 @@ interface CategoryChipsProps {
 export function CategoryChips({
   theme,
   lang,
+  isDesktop,
   value,
   onChange,
   customLabel,
@@ -51,7 +53,8 @@ export function CategoryChips({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "6px 12px",
+                minHeight: isDesktop ? undefined : 44,
+                padding: isDesktop ? "6px 12px" : "6px 16px",
                 borderRadius: 999,
                 border: active
                   ? `1.5px solid ${theme.accentBg}`
@@ -85,6 +88,7 @@ export function CategoryChips({
           style={{
             marginTop: 8,
             width: "100%",
+            minHeight: isDesktop ? undefined : 44,
             padding: "9px 12px",
             borderRadius: 11,
             border: `1px solid ${theme.borderColor}`,

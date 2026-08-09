@@ -166,6 +166,11 @@ export function Dashboard({
             type="button"
             onClick={onViewAll}
             style={{
+              minHeight: isDesktop ? undefined : 44,
+              // Negative inline margin keeps the header row tight while the
+              // tap area grows downward and to the right.
+              margin: isDesktop ? undefined : "-10px -8px",
+              padding: isDesktop ? 0 : "0 8px",
               border: "none",
               background: "none",
               color: theme.accentDark,

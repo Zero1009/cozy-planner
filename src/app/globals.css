@@ -22,6 +22,38 @@ button {
   font-family: var(--font-quicksand), system-ui, sans-serif;
 }
 
+/* iOS Safari zooms the whole page when a field it focuses has a font smaller
+   than 16px. The zoom leaves the visual viewport narrower than the layout
+   viewport, which pushes right-aligned controls — notably the AI composer's
+   send button — outside the visible area. Fields are styled inline throughout
+   the app, so `!important` is what it takes to win here. Pointer devices keep
+   the designed sizes; only touch input needs the floor. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+.cozy-time-input {
+  position: relative;
+}
+
+/* The field carries its own clock icon, so hide the native glyph but stretch
+   its hit area over the whole control — that way a tap anywhere opens the
+   picker instead of only the small indicator at the edge. */
+.cozy-time-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

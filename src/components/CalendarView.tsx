@@ -168,6 +168,7 @@ export function CalendarView({
             onClick={onToday}
             style={{
               flexShrink: 0,
+              minHeight: isDesktop ? undefined : 44,
               padding: isDesktop ? "7px 14px" : "12px 12px",
               borderRadius: 11,
               border: `1px solid ${theme.borderColor}`,
@@ -198,6 +199,7 @@ export function CalendarView({
                 type="button"
                 onClick={() => setCalView(v)}
                 style={{
+                  minHeight: isDesktop ? undefined : 44,
                   padding: isDesktop ? "8px 14px" : "12px 16px",
                   border: "none",
                   background: active ? theme.accentBg : "transparent",
@@ -264,6 +266,7 @@ export function CalendarView({
                 <AddEventForm
                   theme={theme}
                   lang={lang}
+                  isDesktop={isDesktop}
                   selectedDate={selectedDate}
                   cardStyle={cardStyle}
                   variant="panel"
@@ -288,6 +291,7 @@ export function CalendarView({
               <AddEventForm
                 theme={theme}
                 lang={lang}
+                isDesktop={isDesktop}
                 selectedDate={selectedDate}
                 cardStyle={cardStyle}
                 variant="panel"
@@ -328,6 +332,7 @@ export function CalendarView({
         <AddEventForm
           theme={theme}
           lang={lang}
+          isDesktop={isDesktop}
           selectedDate={selectedDate}
           cardStyle={cardStyle}
           variant="sheet"
@@ -894,6 +899,7 @@ function SidePanelAgenda({
 function AddEventForm({
   theme,
   lang,
+  isDesktop,
   selectedDate,
   cardStyle,
   variant,
@@ -902,6 +908,7 @@ function AddEventForm({
 }: {
   theme: Theme;
   lang: Lang;
+  isDesktop: boolean;
   selectedDate: string;
   variant: "panel" | "sheet";
   onClose?: () => void;
@@ -980,6 +987,7 @@ function AddEventForm({
       <CategoryChips
         theme={theme}
         lang={lang}
+        isDesktop={isDesktop}
         value={category}
         onChange={setCategory}
         customLabel={customLabel}
@@ -997,6 +1005,7 @@ function AddEventForm({
         placeholder={t(lang, "eventTitlePlaceholder")}
         autoFocus={variant === "sheet"}
         style={{
+          minHeight: isDesktop ? undefined : 44,
           padding: "10px 12px",
           borderRadius: 12,
           border: `1px solid ${theme.borderColor}`,
@@ -1056,8 +1065,9 @@ function AddEventForm({
               onClick={onClose}
               aria-label={t(lang, "close")}
               style={{
-                width: 32,
-                height: 32,
+                width: 44,
+                height: 44,
+                flexShrink: 0,
                 borderRadius: 999,
                 border: `1px solid ${theme.borderColor}`,
                 background: theme.inputBg,

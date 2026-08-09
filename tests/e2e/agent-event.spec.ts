@@ -91,3 +91,73 @@ test("mobile Cozy Agent composer keeps the send button inside the viewport", asy
   expect(metrics!.sendRight).toBeLessThanOrEqual(metrics!.viewportWidth);
   expect(metrics!.sendBottom).toBeLessThanOrEqual(metrics!.viewportHeight);
 });
+
+// iOS Safari zooms the page whenever it focuses a field under 16px, and the
+// resulting zoom is what pushes the send button out of view. Chromium never
+// zooms, so the size itself is the thing worth asserting — and it only holds
+// under a touch emulation, since the rule is scoped to `pointer: coarse`.
+test.describe("touch device", () => {
+  // Spelled out rather than spread from `devices` because those descriptors
+  // carry `defaultBrowserType`, which Playwright rejects inside a describe.
+  // `hasTouch` is what makes Chromium report `pointer: coarse`.
+  test.use({
+    viewport: { width: 390, height: 664 },
+    deviceScaleFactor: 3,
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("form fields are at least 16px so iOS does not zoom on focus", async ({ page }) => {
+    await login(page);
+    await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
+
+    const composer = page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...");
+    await expect(composer).toBeVisible();
+
+    const undersized = await page.evaluate(() =>
+      [...document.querySelectorAll("input, textarea, select")]
+        .filter((el) => el.getBoundingClientRect().width > 0)
+        .map((el) => ({
+          tag: el.tagName,
+          type: el.getAttribute("type") ?? "",
+          size: parseFloat(getComputedStyle(el).fontSize),
+        }))
+        .filter((f) => f.size < 16)
+    );
+
+    expect(undersized).toEqual([]);
+  });
+
+  test("composer and send button stay aligned and reachable", async ({ page }) => {
+    await login(page);
+    await page.getByRole("button", { name: "ผู้ช่วย AI" }).click();
+
+    const composer = page.getByPlaceholder("พิมพ์คำถามหรือขอความช่วยเหลือ...");
+    await composer.fill("นัดหมอพรุ่งนี้");
+
+    const metrics = await page.evaluate(() => {
+      const send = document.querySelector<HTMLButtonElement>('button[aria-label="ส่งข้อความ"]');
+      const field = document.querySelector<HTMLTextAreaElement>("textarea");
+      if (!send || !field) return null;
+      const s = send.getBoundingClientRect();
+      const f = field.getBoundingClientRect();
+      return {
+        sendRight: Math.round(s.right),
+        sendBottom: Math.round(s.bottom),
+        sendW: Math.round(s.width),
+        sendH: Math.round(s.height),
+        fieldClipped: field.scrollHeight > Math.ceil(f.height) + 1,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(metrics!.sendRight).toBeLessThanOrEqual(metrics!.viewportWidth);
+    expect(metrics!.sendBottom).toBeLessThanOrEqual(metrics!.viewportHeight);
+    // The 16px floor must not overflow the single-line composer.
+    expect(metrics!.fieldClipped).toBe(false);
+    // Send stays a comfortable touch target.
+    expect(metrics!.sendW).toBeGreaterThanOrEqual(44);
+    expect(metrics!.sendH).toBeGreaterThanOrEqual(44);
+  });
+});
