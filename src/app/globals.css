@@ -36,6 +36,24 @@ button {
   }
 }
 
+.cozy-time-input {
+  position: relative;
+}
+
+/* The field carries its own clock icon, so hide the native glyph but stretch
+   its hit area over the whole control — that way a tap anywhere opens the
+   picker instead of only the small indicator at the edge. */
+.cozy-time-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

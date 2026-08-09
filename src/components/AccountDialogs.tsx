@@ -279,7 +279,7 @@ function cardStyle(theme: Theme): React.CSSProperties {
 
 function inputStyle(theme: Theme): React.CSSProperties {
   return {
-    height: 42,
+    height: 44,
     borderRadius: 12,
     border: `1px solid ${theme.borderColor}`,
     background: theme.inputBg,
@@ -292,7 +292,7 @@ function inputStyle(theme: Theme): React.CSSProperties {
 
 function primaryButtonStyle(theme: Theme, pending: boolean): React.CSSProperties {
   return {
-    height: 42,
+    height: 44,
     borderRadius: 13,
     border: "none",
     background: theme.accentBg,

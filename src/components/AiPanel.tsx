@@ -207,9 +207,10 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
             onClick={onClose}
             aria-label="close"
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: 9,
+              width: isDesktop ? 30 : 44,
+              height: isDesktop ? 30 : 44,
+              flexShrink: 0,
+              borderRadius: isDesktop ? 9 : 12,
               border: "none",
               background: theme.chipBg,
               color: theme.textPrimary,
@@ -339,7 +340,8 @@ export function AiPanel({ theme, lang, isDesktop, open, onClose }: AiPanelProps)
               onClick={() => send(label)}
               disabled={pending}
               style={{
-                padding: "6px 11px",
+                minHeight: isDesktop ? undefined : 44,
+                padding: isDesktop ? "6px 11px" : "8px 14px",
                 borderRadius: 999,
                 border: `1px solid ${theme.borderColor}`,
                 background: theme.inputBg,
@@ -495,7 +497,7 @@ function EventDraftCard({
           disabled={disabled}
           style={{
             flex: "1 1 130px",
-            minHeight: 38,
+            minHeight: 44,
             borderRadius: 11,
             border: "none",
             background: state === "created" ? "oklch(58% 0.12 145)" : theme.accentBg,
@@ -515,7 +517,7 @@ function EventDraftCard({
             disabled={state === "creating"}
             style={{
               flex: "0 1 96px",
-              minHeight: 38,
+              minHeight: 44,
               borderRadius: 11,
               border: `1px solid ${theme.borderColor}`,
               background: theme.inputBg,

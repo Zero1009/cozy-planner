@@ -138,7 +138,7 @@ export function LoginForm() {
 }
 
 const inputStyle: React.CSSProperties = {
-  height: 42,
+  height: 44,
   borderRadius: 13,
   border: "1px solid rgba(122, 93, 62, 0.22)",
   background: "#fff8eb",

@@ -508,6 +508,7 @@ function TopBar({
           type="button"
           onClick={toggleLang}
           style={{
+            minHeight: isDesktop ? undefined : 44,
             padding: isDesktop ? "8px 14px" : "12px 13px",
             borderRadius: 11,
             border: `1px solid ${theme.borderColor}`,
@@ -572,6 +573,7 @@ function TopBar({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  minHeight: isDesktop ? undefined : 44,
                   padding: "8px 10px",
                   borderRadius: 10,
                   border: `1px solid ${theme.borderColor}`,
@@ -585,7 +587,7 @@ function TopBar({
                 <span>{darkMode ? "🌙 Dark" : "☀️ Light"}</span>
               </button>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <div style={{ display: "flex", gap: isDesktop ? 8 : 0, justifyContent: "center" }}>
                 {THEME_SWATCHES.map((sw) => (
                   <button
                     key={sw.key}
@@ -593,17 +595,30 @@ function TopBar({
                     onClick={() => setThemeColor(sw.key)}
                     aria-label={sw.key}
                     style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: "50%",
-                      background: sw.color,
-                      border:
-                        themeColor === sw.key
-                          ? `2.5px solid ${theme.textPrimary}`
-                          : "2.5px solid transparent",
+                      width: 44,
+                      height: 44,
+                      padding: 0,
+                      border: "none",
+                      background: "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       cursor: "pointer",
                     }}
-                  />
+                  >
+                    <span
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: "50%",
+                        background: sw.color,
+                        border:
+                          themeColor === sw.key
+                            ? `2.5px solid ${theme.textPrimary}`
+                            : "2.5px solid transparent",
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -628,6 +643,7 @@ function TopBar({
                   type="button"
                   onClick={onOpenProfile}
                   style={{
+                    minHeight: isDesktop ? undefined : 44,
                     padding: "8px 10px",
                     borderRadius: 10,
                     border: `1px solid ${theme.borderColor}`,
@@ -643,6 +659,7 @@ function TopBar({
                 <PwaInstallPrompt
                   variant="inline"
                   buttonStyle={{
+                    minHeight: isDesktop ? undefined : 44,
                     padding: "8px 10px",
                     borderRadius: 10,
                     border: `1px solid ${theme.borderColor}`,
@@ -658,6 +675,7 @@ function TopBar({
                     type="button"
                     onClick={onOpenAdmin}
                     style={{
+                      minHeight: isDesktop ? undefined : 44,
                       padding: "8px 10px",
                       borderRadius: 10,
                       border: `1px solid ${theme.borderColor}`,
@@ -675,6 +693,7 @@ function TopBar({
                   type="button"
                   onClick={logout}
                   style={{
+                    minHeight: isDesktop ? undefined : 44,
                     padding: "8px 10px",
                     borderRadius: 10,
                     border: `1px solid ${theme.borderColor}`,

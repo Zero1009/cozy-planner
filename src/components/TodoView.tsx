@@ -120,6 +120,8 @@ export function TodoView({
             placeholder={t(lang, "taskPlaceholder")}
             style={{
               flex: 1,
+              minWidth: 0,
+              minHeight: isDesktop ? undefined : 44,
               padding: "10px 14px",
               borderRadius: 12,
               border: `1px solid ${theme.borderColor}`,
@@ -133,6 +135,7 @@ export function TodoView({
             type="button"
             onClick={addTodo}
             style={{
+              minHeight: isDesktop ? undefined : 44,
               padding: "10px 18px",
               borderRadius: 12,
               border: "none",
@@ -151,6 +154,7 @@ export function TodoView({
         <CategoryChips
           theme={theme}
           lang={lang}
+          isDesktop={isDesktop}
           value={category}
           onChange={setCategory}
           customLabel={customLabel}
@@ -167,6 +171,7 @@ export function TodoView({
               type="button"
               onClick={() => setFilter(f.key)}
               style={{
+                minHeight: isDesktop ? undefined : 44,
                 padding: isDesktop ? "7px 14px" : "11px 16px",
                 borderRadius: 999,
                 border: active ? `1.5px solid ${theme.accentBg}` : `1px solid ${theme.borderColor}`,
@@ -210,11 +215,11 @@ export function TodoView({
                     onClick={() => toggleDone(todo)}
                     aria-label="toggle done"
                     style={{
-                      // Touch box is 40px; the negative margin keeps the row
+                      // Touch box is 44px; the negative margin keeps the row
                       // laid out around the 22px tickbox drawn inside it.
-                      width: 40,
-                      height: 40,
-                      margin: -9,
+                      width: 44,
+                      height: 44,
+                      margin: -11,
                       border: "none",
                       background: "transparent",
                       padding: 0,
