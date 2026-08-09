@@ -1,15 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { login } from "./helpers";
 
-const username = "trk";
-const password = "AdminPass-2026";
-
-async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
-  await page.getByLabel("ชื่อผู้ใช้").fill(username);
-  await page.getByRole("textbox", { name: /รหัสผ่าน/ }).fill(password);
-  await page.getByRole("button", { name: "เข้าสู่ระบบ" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
 
 test.describe("add event on a phone", () => {
   test.use({

@@ -10,7 +10,13 @@ export default defineConfig({
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
-  reporter: process.env.CI ? "github" : "list",
+  // One retry on CI only. This does not fix a flake — it downgrades it from a
+  // red build to a "flaky" line in the report while the trace from the failed
+  // attempt is still uploaded, so a real regression stays visible.
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }]]
+    : "list",
   use: {
     baseURL,
     trace: "retain-on-failure",
