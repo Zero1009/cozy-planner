@@ -206,7 +206,9 @@ button {
 @media (max-width: 640px) {
   .cozy-dialog-backdrop {
     align-items: flex-end !important;
-    padding: 10px !important;
+    /* Safe-area bottom inset so a sheet's footer buttons (this one's, and the
+       existing add/edit sheets') don't sit under the home indicator. */
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) !important;
   }
 
   .cozy-dialog-card {
@@ -225,5 +227,105 @@ button {
   .cozy-user-row {
     flex-direction: column !important;
     align-items: flex-start !important;
+  }
+}
+
+/* Day-detail sheet. Placed after the mobile dialog block above on purpose:
+   `.cozy-dialog-card` puts `overflow-y: auto` on the card itself, which would
+   scroll the pinned header away — these rules reset that, and only win
+   because they come later at equal specificity (both use one class plus
+   `!important`). */
+.cozy-day-sheet {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden !important;
+  max-height: min(86vh, 640px);
+  max-height: min(86dvh, 640px); /* iOS: vh includes the area under the URL bar */
+}
+
+.cozy-day-sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The browser keeps vertical scroll; the swipe hook owns horizontal. Never
+     `touch-action: none` here — that would kill the card's own scrolling. */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cozy-day-backdrop {
+  touch-action: none;
+}
+
+.cozy-day-pane {
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cozy-day-pane.is-dragging {
+  /* No transition while the finger is driving the transform directly, and
+     `will-change` only for the drag's duration — left on permanently it can
+     promote a layer that renders text blurry at non-integer offsets on iOS. */
+  transition: none;
+  will-change: transform;
+}
+
+@keyframes cozySheetPop {
+  from {
+    transform: translateY(16px) scale(0.985);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.cozy-sheet-pop {
+  animation: cozySheetPop 260ms cubic-bezier(0.22, 1.18, 0.36, 1) both;
+}
+
+@keyframes cozyDayInNext {
+  from {
+    transform: translateX(26px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes cozyDayInPrev {
+  from {
+    transform: translateX(-26px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.cozy-day-in-next {
+  animation: cozyDayInNext 190ms ease-out both;
+}
+
+.cozy-day-in-prev {
+  animation: cozyDayInPrev 190ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cozy-sheet-pop,
+  .cozy-day-in-next,
+  .cozy-day-in-prev {
+    animation: none !important;
+  }
+  /* The drag transform itself stays — it's direct manipulation following the
+     user's finger, not decorative motion. Only the release-snap transition
+     is what reduced-motion asks to remove. */
+  .cozy-day-pane {
+    transition: none !important;
   }
 }

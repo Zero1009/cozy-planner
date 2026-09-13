@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { AgendaRow } from "@/components/ui/AgendaRow";
 import { CategoryChips } from "@/components/ui/CategoryChips";
+import { DayDetailSheet } from "@/components/DayDetailSheet";
 import { EditItemSheet, type EditTarget } from "@/components/EditItemSheet";
-import { DeleteButton } from "@/components/ui/DeleteButton";
+import { HolidayBanner } from "@/components/ui/HolidayBanner";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
 import { useCreateEvent, useDeleteEvent } from "@/hooks/useEvents";
 import { useDeleteTodo } from "@/hooks/useTodos";
 import { agendaForDate, type AgendaItem } from "@/lib/agenda";
-import { holidayName, HOLIDAY_BORDER, HOLIDAY_COLOR, HOLIDAY_TINT } from "@/lib/holidays";
+import { holidayName, HOLIDAY_COLOR, HOLIDAY_TINT } from "@/lib/holidays";
 import {
   addDays,
   addMonths,
@@ -17,6 +19,7 @@ import {
   dowShort,
   fromISO,
   monthNames,
+  shiftISO,
   shortDateLabel,
   toISO,
 } from "@/lib/dates";
@@ -84,6 +87,10 @@ export function CalendarView({
   const deleteTodo = useDeleteTodo();
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [editing, setEditing] = useState<EditTarget | null>(null);
+  const [dayCardOpen, setDayCardOpen] = useState(false);
+  // Which entry animation the day sheet's (keyed) content should play next —
+  // set right before the date changes so the remount picks it up.
+  const [swipeDir, setSwipeDir] = useState<"next" | "prev">("next");
 
   // Agenda rows are a flattened view of two lists, so an edit has to find the
   // record the row was built from.
@@ -114,12 +121,27 @@ export function CalendarView({
     else setSelectedDate(toISO(addDays(fromISO(selectedDate), 1)));
   }
 
-  function selectCell(iso: string, inMonth: boolean) {
+  // Shared by cell taps and swipe/arrow navigation: keeps `calRefDate` (the
+  // month grid behind the sheet) in sync whenever the date moves to a
+  // different month, so closing the sheet doesn't strand the grid a month
+  // behind where the user ended up.
+  function goToDate(iso: string) {
     setSelectedDate(iso);
-    if (!inMonth) {
-      const d = fromISO(iso);
+    const d = fromISO(iso);
+    const ref = fromISO(calRefDate);
+    if (d.getMonth() !== ref.getMonth() || d.getFullYear() !== ref.getFullYear()) {
       setCalRefDate(toISO(new Date(d.getFullYear(), d.getMonth(), 1)));
     }
+  }
+
+  function selectCell(iso: string, _inMonth: boolean) {
+    goToDate(iso);
+    if (!isDesktop) setDayCardOpen(true);
+  }
+
+  function stepDay(delta: 1 | -1) {
+    setSwipeDir(delta > 0 ? "next" : "prev");
+    goToDate(shiftISO(selectedDate, delta));
   }
 
   let periodLabel: string;
@@ -261,7 +283,7 @@ export function CalendarView({
               todayISO={todayISO}
               events={events}
               todos={todos}
-              onSelect={(iso) => setSelectedDate(iso)}
+              onSelect={(iso) => selectCell(iso, true)}
               cardStyle={cardStyle}
             />
           )}
@@ -344,6 +366,29 @@ export function CalendarView({
         </button>
       )}
 
+      {!isDesktop && dayCardOpen && (
+        <DayDetailSheet
+          theme={theme}
+          lang={lang}
+          isDesktop={isDesktop}
+          dateISO={selectedDate}
+          todayISO={todayISO}
+          events={events}
+          todos={todos}
+          direction={swipeDir}
+          onPrevDay={() => stepDay(-1)}
+          onNextDay={() => stepDay(1)}
+          onEdit={editItem}
+          onDelete={deleteItem}
+          onAddEvent={() => {
+            setDayCardOpen(false);
+            setAddSheetOpen(true);
+          }}
+          onClose={() => setDayCardOpen(false)}
+          inert={editing !== null}
+        />
+      )}
+
       {editing && (
         <EditItemSheet
           theme={theme}
@@ -412,55 +457,6 @@ function IconButton({
 
 interface CardStyleProp {
   cardStyle: CSSProperties;
-}
-
-/** Shows a warm-tinted banner naming the Thai public holiday on `dateISO`. */
-function HolidayBanner({
-  theme,
-  lang,
-  dateISO,
-  compact,
-}: {
-  theme: Theme;
-  lang: Lang;
-  dateISO: string;
-  compact?: boolean;
-}) {
-  const name = holidayName(dateISO, lang);
-  if (!name) return null;
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: compact ? "7px 10px" : "9px 12px",
-        borderRadius: compact ? 11 : 13,
-        background: HOLIDAY_TINT,
-        border: `1px solid ${HOLIDAY_BORDER}`,
-        marginBottom: compact ? 8 : 10,
-      }}
-    >
-      <span aria-hidden style={{ fontSize: compact ? 13 : 15, lineHeight: 1 }}>
-        🎌
-      </span>
-      <span style={{ fontSize: compact ? 12 : 13, fontWeight: 800, color: HOLIDAY_COLOR, flexShrink: 0 }}>
-        {t(lang, "holiday")}
-      </span>
-      <span
-        style={{
-          fontSize: compact ? 12.5 : 13.5,
-          color: theme.textPrimary,
-          fontWeight: 600,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {name}
-      </span>
-    </div>
-  );
 }
 
 function MonthGrid({
@@ -804,59 +800,7 @@ function DayAgenda({
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {items.map((item) => (
-            <div
-              key={item.key}
-              role="button"
-              tabIndex={0}
-              onClick={() => onEdit(item)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onEdit(item);
-                }
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "9px 12px",
-                borderRadius: 13,
-                background: theme.inputBg,
-                cursor: "pointer",
-              }}
-            >
-              <span
-                style={{ width: 8, height: 8, borderRadius: "50%", background: item.dotColor, flexShrink: 0 }}
-              />
-              <span style={{ fontSize: 12.5, color: theme.textMuted, width: 90, flexShrink: 0 }}>
-                {item.time}
-              </span>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  color: theme.textPrimary,
-                  textDecoration: item.done ? "line-through" : "none",
-                  opacity: item.done ? 0.5 : 1,
-                }}
-              >
-                {item.title}
-              </span>
-              <span
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  padding: "3px 9px",
-                  borderRadius: 999,
-                  background: item.tagBg,
-                  color: item.tagColor,
-                  flexShrink: 0,
-                }}
-              >
-                {item.categoryLabel}
-              </span>
-              <DeleteButton theme={theme} ariaLabel="delete item" onClick={() => onDelete(item)} />
-            </div>
+            <AgendaRow key={item.key} theme={theme} item={item} onEdit={onEdit} onDelete={onDelete} />
           ))}
         </div>
       )}
@@ -896,49 +840,15 @@ function SidePanelAgenda({
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {items.map((item) => (
-            <div
+            <AgendaRow
               key={item.key}
-              role="button"
-              tabIndex={0}
-              onClick={() => onEdit(item)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onEdit(item);
-                }
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "7px 10px",
-                borderRadius: 11,
-                background: theme.inputBg,
-                cursor: "pointer",
-              }}
-            >
-              <span
-                style={{ width: 7, height: 7, borderRadius: "50%", background: item.dotColor, flexShrink: 0 }}
-              />
-              <span style={{ fontSize: 11.5, color: theme.textMuted, width: 60, flexShrink: 0 }}>
-                {item.time}
-              </span>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: 13,
-                  color: theme.textPrimary,
-                  textDecoration: item.done ? "line-through" : "none",
-                  opacity: item.done ? 0.5 : 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {item.title}
-              </span>
-              <DeleteButton theme={theme} ariaLabel="delete item" size={13} onClick={() => onDelete(item)} />
-            </div>
+              theme={theme}
+              item={item}
+              size="compact"
+              showCategory={false}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}

@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fromISO, monthNamesShort, shortDateLabel } from "./dates";
+import {
+  fromISO,
+  fullDateLabel,
+  longDateLabel,
+  monthNamesShort,
+  shiftISO,
+  shortDateLabel,
+  weekdayLabel,
+} from "./dates";
 
 test("Thai month abbreviations are the standard dotted forms", () => {
   assert.deepEqual(monthNamesShort("th"), [
@@ -37,4 +45,40 @@ test("every Thai abbreviation ends in a period and stays short", () => {
 test("English short dates are unchanged", () => {
   assert.equal(shortDateLabel(fromISO("2026-01-09"), "en"), "9 Jan");
   assert.equal(shortDateLabel(fromISO("2026-09-30"), "en"), "30 Sep");
+});
+
+test("shiftISO crosses a month boundary", () => {
+  assert.equal(shiftISO("2026-08-31", 1), "2026-09-01");
+  assert.equal(shiftISO("2026-09-01", -1), "2026-08-31");
+});
+
+test("shiftISO crosses a year boundary", () => {
+  assert.equal(shiftISO("2026-12-31", 1), "2027-01-01");
+  assert.equal(shiftISO("2027-01-01", -1), "2026-12-31");
+});
+
+test("shiftISO lands on a leap day", () => {
+  // 2028 is a leap year (divisible by 4, not a century).
+  assert.equal(shiftISO("2028-02-28", 1), "2028-02-29");
+  assert.equal(shiftISO("2028-03-01", -1), "2028-02-29");
+});
+
+test("shiftISO handles multi-day negative shifts", () => {
+  assert.equal(shiftISO("2026-08-09", -10), "2026-07-30");
+});
+
+test("weekdayLabel gives the long day-of-week name in both languages", () => {
+  // 2026-08-09 is a Sunday.
+  assert.equal(weekdayLabel(fromISO("2026-08-09"), "th"), "อาทิตย์");
+  assert.equal(weekdayLabel(fromISO("2026-08-09"), "en"), "Sunday");
+});
+
+test("fullDateLabel spells out the month with the localized year", () => {
+  assert.equal(fullDateLabel(fromISO("2026-08-09"), "th"), "9 สิงหาคม 2569");
+  assert.equal(fullDateLabel(fromISO("2026-08-09"), "en"), "9 August 2026");
+});
+
+test("longDateLabel combines weekday, full date and localized year", () => {
+  assert.equal(longDateLabel(fromISO("2026-08-09"), "th"), "วันอาทิตย์ที่ 9 สิงหาคม 2569");
+  assert.equal(longDateLabel(fromISO("2026-08-09"), "en"), "Sunday, August 9, 2026");
 });
