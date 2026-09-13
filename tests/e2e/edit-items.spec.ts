@@ -11,6 +11,20 @@ function itemRow(page: Page, title: string) {
   return page.locator('div[role="button"]').filter({ hasText: title }).first();
 }
 
+/**
+ * Local-time ISO calendar day, matching `src/lib/dates.ts`'s `toISO`. On
+ * `/calendar` the mobile inline agenda (and the desktop side panel) show
+ * `selectedDate`, which defaults to today — a test that seeds a fixed date
+ * and clicks straight into that agenda without first navigating there only
+ * passes when the wall clock happens to be that date.
+ */
+function isoDate(offsetDays = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 /** The e2e database starts empty, so each test seeds and removes its own row. */
 async function createEvent(page: Page, body: Record<string, unknown>) {
   const res = await page.request.post("/api/events", { data: body });
@@ -35,10 +49,12 @@ test.describe("editing your own items", () => {
   test("tapping an event opens it prefilled and saves title, date and time", async ({ page }) => {
     await login(page);
     const title = `ประชุม ${Date.now()}`;
+    const seededDate = isoDate();
+    const editedDate = isoDate(11);
     const { id } = await createEvent(page, {
       title,
       category: "work",
-      date: "2026-08-09",
+      date: seededDate,
       time: "09:00",
     });
 
@@ -48,11 +64,11 @@ test.describe("editing your own items", () => {
     const dialog = page.getByRole("dialog", { name: "แก้ไขนัดหมาย" });
     await expect(dialog).toBeVisible();
     // Prefilled from the record, not blank.
-    await expect(dialog.locator('input[type="date"]')).toHaveValue("2026-08-09");
+    await expect(dialog.locator('input[type="date"]')).toHaveValue(seededDate);
     await expect(dialog.locator('input[type="time"]')).toHaveValue("09:00");
 
     await dialog.locator("input:not([type])").first().fill(`${title} แก้แล้ว`);
-    await dialog.locator('input[type="date"]').fill("2026-08-20");
+    await dialog.locator('input[type="date"]').fill(editedDate);
     await dialog.locator('input[type="time"]').fill("14:45");
     await dialog.getByRole("button", { name: "บันทึก" }).click();
 
@@ -65,7 +81,7 @@ test.describe("editing your own items", () => {
         const row = events.find((e) => e.id === id);
         return row ? `${row.title}|${row.date}|${row.time}` : null;
       })
-      .toBe(`${title} แก้แล้ว|2026-08-20|14:45`);
+      .toBe(`${title} แก้แล้ว|${editedDate}|14:45`);
 
     await page.request.delete(`/api/events/${id}`);
   });

@@ -84,3 +84,23 @@ export const monthNamesShort = (lang: Lang) => MONTHS_SHORT[lang];
 export function shortDateLabel(d: Date, lang: Lang): string {
   return `${d.getDate()} ${MONTHS_SHORT[lang][d.getMonth()]}`;
 }
+
+/** "อาทิตย์" / "Sunday" — the day sheet's header wants this on its own line. */
+export function weekdayLabel(d: Date, lang: Lang): string {
+  return DOW_LONG[lang][d.getDay()];
+}
+
+/**
+ * "9 สิงหาคม 2569" / "9 August 2026" — a shorter alternative to
+ * `longDateLabel` for the day sheet header, which already carries the
+ * weekday on its own line above and has only ~220px left after three 44px
+ * buttons on a 390px phone.
+ */
+export function fullDateLabel(d: Date, lang: Lang): string {
+  return `${d.getDate()} ${MONTHS[lang][d.getMonth()]} ${displayYear(d.getFullYear(), lang)}`;
+}
+
+/** Shift an ISO calendar day by whole days. Crosses months, years and leap days. */
+export function shiftISO(iso: string, days: number): string {
+  return toISO(addDays(fromISO(iso), days));
+}
