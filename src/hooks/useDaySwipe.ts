@@ -69,6 +69,11 @@ export function useDaySwipe({ onPrev, onNext, enabled }: UseDaySwipeOptions): Da
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    // A `click` normally follows every drag and clears this flag, but not
+    // always: the element under the finger can be gone by then, since a
+    // committed swipe remounts the pane's keyed content. Clearing here means
+    // a flag that outlived its gesture can never swallow a later real tap.
+    suppressClickRef.current = false;
     if (!enabled || !e.isPrimary || dragRef.current) return;
     if ((e.target as HTMLElement).closest("input,textarea,select")) return;
     // Both screen edges belong to iOS's history-navigation swipe, which
@@ -134,7 +139,12 @@ export function useDaySwipe({ onPrev, onNext, enabled }: UseDaySwipeOptions): Da
     const first = drag.samples[0];
     const last = drag.samples[drag.samples.length - 1];
     const dt = last.t - first.t;
-    const velocityX = dt > 0 ? (last.x - first.x) / dt : 0;
+    // A drag held still before release keeps its last samples from whenever
+    // motion stopped, so the raw figure would report the speed the finger had
+    // *before* the pause. Someone who drags halfway, hesitates, then lifts is
+    // cancelling — don't let a stale reading commit the day change for them.
+    const stale = e.timeStamp - last.t > VELOCITY_WINDOW_MS;
+    const velocityX = dt > 0 && !stale ? (last.x - first.x) / dt : 0;
     const width = paneRef.current?.clientWidth || window.innerWidth;
 
     releaseCapture(e.target, e.pointerId);

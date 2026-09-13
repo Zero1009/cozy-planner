@@ -240,8 +240,12 @@ button {
   flex-direction: column;
   padding: 0 !important;
   overflow: hidden !important;
-  max-height: min(86vh, 640px);
-  max-height: min(86dvh, 640px); /* iOS: vh includes the area under the URL bar */
+  /* `!important` is load-bearing, not decoration: `.cozy-dialog-card` above
+     sets `max-height: 88vh !important` for mobile, and an important
+     declaration beats a normal one no matter the source order — without these
+     the `dvh` cap below would never apply on the very screens it exists for. */
+  max-height: min(86vh, 640px) !important;
+  max-height: min(86dvh, 640px) !important; /* iOS: vh includes the area under the URL bar */
 }
 
 .cozy-day-sheet-body {

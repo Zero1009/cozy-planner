@@ -107,7 +107,17 @@ export function DayDetailSheet({
   const todoCount = items.length - eventCount;
 
   return (
-    <div className="cozy-dialog-backdrop cozy-day-backdrop" onClick={onClose}>
+    <div
+      className="cozy-dialog-backdrop cozy-day-backdrop"
+      // Only a click that lands on the dim area itself closes the sheet. A
+      // horizontal swipe can end with the finger past the card's edge, and the
+      // click that follows is then retargeted to a common ancestor — without
+      // this check, a slightly overshot swipe would dismiss the sheet instead
+      // of changing the day.
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         className="cozy-dialog-card cozy-day-sheet cozy-sheet-pop"
         role="dialog"
