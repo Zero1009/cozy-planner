@@ -7,6 +7,10 @@ const isoDate = z
 const hhmm = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Expected 24h time (HH:MM)");
+/** An end time may also be "24:00" — an afternoon shift ends at midnight of its own day. */
+const endHhmm = z
+  .string()
+  .regex(/^(([01]\d|2[0-3]):[0-5]\d|24:00)$/, "Expected 24h time (HH:MM)");
 
 export const categorySchema = z.enum(CATEGORIES);
 export const prioritySchema = z.enum(PRIORITIES);
@@ -41,7 +45,7 @@ export const createEventSchema = z.object({
   customCategoryLabel,
   date: isoDate,
   time: hhmm.default("09:00"),
-  endTime: hhmm.optional(),
+  endTime: endHhmm.optional(),
 });
 
 export const updateEventSchema = z
@@ -51,10 +55,15 @@ export const updateEventSchema = z
     customCategoryLabel: customCategoryLabel.or(z.null()),
     date: isoDate,
     time: hhmm,
-    endTime: hhmm.or(z.null()),
+    endTime: endHhmm.or(z.null()),
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, "No fields to update");
+
+/** Bulk insert from a parsed roster; the importer previews these first. */
+export const importEventsSchema = z.object({
+  events: z.array(createEventSchema).min(1, "Nothing to import").max(400),
+});
 
 /** AI chat request: a short rolling transcript plus the active language. */
 export const chatSchema = z.object({
@@ -75,4 +84,5 @@ export type CreateTodoInput = z.infer<typeof createTodoSchema>;
 export type UpdateTodoInput = z.infer<typeof updateTodoSchema>;
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
+export type ImportEventsInput = z.infer<typeof importEventsSchema>;
 export type ChatInput = z.infer<typeof chatSchema>;

@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "../src/db/client";
+import { PLAIN_TIME, SHIFT_HOURS } from "../src/lib/roster";
 
 /**
  * One-off importer for a month of shift work transcribed from a screenshot of
@@ -10,16 +11,6 @@ import { db, schema } from "../src/db/client";
  * Re-running is safe — an event already present for the same user, date and
  * title is skipped rather than duplicated.
  */
-
-/** Shift start/end times. Edit these if the ward's hours differ. */
-const SHIFT_HOURS = {
-  morning: { time: "08:00", endTime: "16:00" },   // ช — เช้า
-  afternoon: { time: "16:00", endTime: "24:00" }, // บ — บ่าย
-  night: { time: "00:00", endTime: "08:00" },     // ด — ดึก
-} as const;
-
-/** Non-shift rows get a neutral mid-morning slot and no end time. */
-const PLAIN_TIME = "09:00";
 
 type Kind = keyof typeof SHIFT_HOURS | "off" | "personal" | "other";
 

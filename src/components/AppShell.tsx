@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePrefs } from "@/app/providers";
 import { AiPanel } from "@/components/AiPanel";
 import { AdminUsersDialog, ProfileDialog } from "@/components/AccountDialogs";
+import { RosterImportDialog } from "@/components/RosterImportDialog";
 import { CozyLoading } from "@/components/CozyLoading";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { purgePwaCaches } from "@/components/ServiceWorkerRegistrar";
@@ -86,6 +87,7 @@ export function AppShell({ currentUser }: AppShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(currentUser.mustUpdateProfile);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [rosterOpen, setRosterOpen] = useState(false);
   const [aiButtonPoint, setAiButtonPoint] = useState<FloatingPoint | null>(null);
   const aiDragRef = useRef<{
     startX: number;
@@ -210,6 +212,10 @@ export function AppShell({ currentUser }: AppShellProps) {
         onOpenAdmin={() => {
           setSettingsOpen(false);
           setAdminOpen(true);
+        }}
+        onOpenRoster={() => {
+          setSettingsOpen(false);
+          setRosterOpen(true);
         }}
       />
 
@@ -351,6 +357,10 @@ export function AppShell({ currentUser }: AppShellProps) {
       {adminOpen && user.isAdmin && (
         <AdminUsersDialog theme={theme} onClose={() => setAdminOpen(false)} />
       )}
+
+      {rosterOpen && (
+        <RosterImportDialog theme={theme} user={user} onClose={() => setRosterOpen(false)} />
+      )}
     </div>
   );
 }
@@ -386,6 +396,7 @@ interface TopBarProps {
   isDesktop: boolean;
   onOpenProfile: () => void;
   onOpenAdmin: () => void;
+  onOpenRoster: () => void;
 }
 
 function TopBar({
@@ -402,6 +413,7 @@ function TopBar({
   isDesktop,
   onOpenProfile,
   onOpenAdmin,
+  onOpenRoster,
 }: TopBarProps) {
   async function logout() {
     await postJSON("/api/auth/logout", {});
@@ -662,6 +674,23 @@ function TopBar({
                   }}
                 >
                   โปรไฟล์ของฉัน
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenRoster}
+                  style={{
+                    minHeight: isDesktop ? undefined : 44,
+                    padding: "8px 10px",
+                    borderRadius: 10,
+                    border: `1px solid ${theme.borderColor}`,
+                    background: theme.inputBg,
+                    color: theme.textPrimary,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  นำเข้าตารางเวร
                 </button>
                 <PwaInstallPrompt
                   variant="inline"
