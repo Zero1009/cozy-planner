@@ -238,7 +238,7 @@ export function AdminUsersDialog({ theme, onClose }: AdminUsersDialogProps) {
   );
 }
 
-function Field({ label, theme, children }: { label: string; theme: Theme; children: React.ReactNode }) {
+export function Field({ label, theme, children }: { label: string; theme: Theme; children: React.ReactNode }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 6, color: theme.textSecondary, fontSize: 13, fontWeight: 800 }}>
       {label}
@@ -247,7 +247,7 @@ function Field({ label, theme, children }: { label: string; theme: Theme; childr
   );
 }
 
-function Message({ theme, text }: { theme: Theme; text: string }) {
+export function Message({ theme, text }: { theme: Theme; text: string }) {
   return <p style={{ margin: "10px 0 0", color: theme.textSecondary, fontSize: 13, fontWeight: 700 }}>{text}</p>;
 }
 
@@ -255,7 +255,7 @@ function Badge({ theme, text }: { theme: Theme; text: string }) {
   return <span style={{ padding: "4px 8px", borderRadius: 999, background: theme.accentTint, color: theme.textPrimary, fontSize: 11, fontWeight: 800 }}>{text}</span>;
 }
 
-function CloseButton({ theme, onClick }: { theme: Theme; onClick: () => void }) {
+export function CloseButton({ theme, onClick }: { theme: Theme; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} aria-label="ปิด" style={{ border: `1px solid ${theme.borderColor}`, background: theme.chipBg, color: theme.textPrimary, borderRadius: 10, width: 34, height: 34, cursor: "pointer", fontWeight: 900 }}>
       ×
@@ -263,7 +263,7 @@ function CloseButton({ theme, onClick }: { theme: Theme; onClick: () => void }) 
   );
 }
 
-function cardStyle(theme: Theme): React.CSSProperties {
+export function cardStyle(theme: Theme): React.CSSProperties {
   return {
     width: "100%",
     maxWidth: 480,
@@ -277,7 +277,7 @@ function cardStyle(theme: Theme): React.CSSProperties {
   };
 }
 
-function inputStyle(theme: Theme): React.CSSProperties {
+export function inputStyle(theme: Theme): React.CSSProperties {
   return {
     height: 44,
     borderRadius: 12,
@@ -290,7 +290,7 @@ function inputStyle(theme: Theme): React.CSSProperties {
   };
 }
 
-function primaryButtonStyle(theme: Theme, pending: boolean): React.CSSProperties {
+export function primaryButtonStyle(theme: Theme, pending: boolean): React.CSSProperties {
   return {
     height: 44,
     borderRadius: 13,

@@ -5,6 +5,7 @@ assistant. Built as a real app from the "Calendar TODO App" design mockup.
 
 - **Dashboard** — greeting, daily stats (tasks today, completion %, upcoming events), today's agenda, and what's coming up.
 - **Calendar** — month / week / day views, add events with categories, a time picker, and a per-day agenda.
+- **Roster import** — upload the ward's monthly duty roster (.xlsx), type your name, preview your ช/บ/ด shifts (plus เสริม), and add them to your calendar in one go. Re-importing skips what is already there.
 - **To-Do** — quick add, categories, priority, and All / Today / Upcoming / Completed filters.
 - **AI Assistant** — a warm, concise helper that can summarize your tasks and tell you what's on today (powered by Groq).
 - **Private access** — login-only app; TRK creates accounts from the terminal (no public registration).
@@ -42,6 +43,8 @@ src/
       auth/login  auth/logout  auth/me   # cookie-session authentication
       todos/route.ts        todos/[id]/route.ts     # REST for todos
       events/route.ts       events/[id]/route.ts    # REST for events
+      events/import/route.ts   # bulk add, skipping date+title duplicates
+      roster/preview/route.ts  # read a ward roster .xlsx → one person's shifts (writes nothing)
       ai/route.ts           # chat → Groq, grounded in your live data
   components/           # AppShell, Dashboard, CalendarView, TodoView, AiPanel
   hooks/                # useTodos, useEvents, useIsDesktop (TanStack Query)
