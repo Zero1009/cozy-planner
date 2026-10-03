@@ -48,6 +48,12 @@ export async function postJSON<T>(url: string, body: unknown): Promise<T> {
   return handle<T>(res);
 }
 
+/** POST a multipart form (file uploads); the browser sets the boundary header. */
+export async function postForm<T>(url: string, body: FormData): Promise<T> {
+  const res = await fetch(url, { method: "POST", body });
+  return handle<T>(res);
+}
+
 export async function patchJSON<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, {
     method: "PATCH",
